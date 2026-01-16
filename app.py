@@ -261,7 +261,7 @@ def make_stages() -> Dict[int, Stage]:
     s[3] = Stage(
         3,
         note_text="방금 말한 소리 말이야…\n아마 착각이겠지? 😅\n그래도 옷은 제대로 골라야지!",
-        prompt="치마가 좋을까? 반바지가 좋을까?",
+        prompt="혹시 나중에 땀이 많이 날 수도 있으니까, 예비용 옷도 챙겨 보자!",
         extra_banner="계속 문을 쳐다보게 돼. 기분이 나빠.",
         extra_choices=[
             Option("door_check", "문을 다시 잠근다", "일단 잠궜어. 그나마 기분이 나아졌어.", darkness_delta=1, set_flag=flag_checked_door),
