@@ -288,7 +288,7 @@ def make_stages() -> Dict[int, Stage]:
             Option("1", "1번: 핑크 포인트", "역시 핑크지! 오늘은 완벽해 💗", darkness_delta=0),
             Option("2", "2번: 화이트 톤", "깨끗해. 마음이 편해져.", darkness_delta=0),
             Option("3", "3번: 블랙 포인트", "어두운 색이 끌릴 때도 있지.", darkness_delta=1),
-            Option("4", "4번: "다 뒤덮인 더러운 색", "진심이야?", darkness_delta=2, add_ignore=1),
+            Option("4", "4번: 다 뒤덮인 더러운 색", "진심이야?", darkness_delta=2, add_ignore=1),
         ],
     )
 
