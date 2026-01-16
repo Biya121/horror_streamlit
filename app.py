@@ -4,8 +4,14 @@
 # Changes in this version:
 # 1) Stage-specific ominous banner text (not统一).
 # 2) If extra (ominous) choices + outfit choices appear together, user must choose BOTH before proceeding.
-#    - We store both selections, then show ONE combined outcome screen.
 # 3) When atmosphere is dark, button font color becomes RED for readability.
+#
+# NEW requested updates:
+# 1) In ominous situations, if user waits, buttons subtly "shake".
+# 2) If user waits for a few seconds with no action, banner flashes "아직이야?" briefly then disappears.
+# 3) Stage 7 & 8: no images, buttons only; and remove "옷을 1개 골라줘" guidance text only for stage 7/8.
+# 4) Update A/B/C ending conditions based on: cautious actions -> A, many ignores -> B, worst-choice accumulation -> C.
+#    (Keep existing story texts unchanged.)
 
 import os
 from dataclasses import dataclass, field
@@ -34,6 +40,10 @@ def init_state():
             "ignored_warnings": 0,
         }
 
+    # NEW: track "worst" choices to drive ending C
+    if "worst_count" not in ss:
+        ss.worst_count = 0
+
     # For combined selection flow (extra + outfit)
     if "picked_extra" not in ss:
         ss.picked_extra = None  # Option or None
@@ -59,6 +69,7 @@ def reset_game():
         "stayed_home": False,
         "ignored_warnings": 0,
     }
+    ss.worst_count = 0
     ss.picked_extra = None
     ss.picked_outfit = None
     ss.last_outcome = ""
@@ -93,8 +104,7 @@ def apply_theme(darkness: int):
     note_bg = ["#ffd9ec", "#ffd0e8", "#ffc4e2", "#ffb9dc", "#3a2a33", "#2a2026", "#20171d", "#161017", "#100b12"][d]
     note_text = ["#2b1b24", "#2b1b24", "#2b1b24", "#2b1b24", "#f2e9ef", "#f2e9ef", "#f2e9ef", "#f2e9ef", "#f2e9ef"][d]
 
-    # (3) Button text color rule:
-    # When dark enough, use RED text for readability.
+    # Button text color: dark -> red
     button_text = "#2b1b24" if d < 5 else "#ff2a2a"
 
     st.markdown(
@@ -180,7 +190,20 @@ def apply_theme(darkness: int):
           padding: 12px 12px;
           font-weight: 900;
           border: 1px solid rgba(255,255,255,0.18);
-          color: {button_text} !important;     /* force */
+          color: {button_text} !important;
+        }}
+
+        /* NEW: subtle shake animation (applied to body as a "mode" flag) */
+        @keyframes tinyshake {{
+          0%   {{ transform: translate(0px, 0px) rotate(0deg); }}
+          20%  {{ transform: translate(-1px, 0px) rotate(-0.2deg); }}
+          40%  {{ transform: translate(1px, 0px) rotate(0.2deg); }}
+          60%  {{ transform: translate(-1px, 0px) rotate(0deg); }}
+          80%  {{ transform: translate(1px, 0px) rotate(-0.2deg); }}
+          100% {{ transform: translate(0px, 0px) rotate(0deg); }}
+        }}
+        body.shake-mode div.stButton > button {{
+          animation: tinyshake 0.18s infinite;
         }}
 
         header, footer {{ visibility: hidden; }}
@@ -371,7 +394,7 @@ STAGES = make_stages()
 
 
 # ----------------------------
-# Apply option effects (without auto-scene jump)
+# Apply option effects
 # ----------------------------
 
 def apply_effects(opt: Option):
@@ -382,16 +405,57 @@ def apply_effects(opt: Option):
         ss.flags["ignored_warnings"] += opt.add_ignore
     ss.darkness = min(8, ss.darkness + opt.darkness_delta)
 
+    # NEW: detect "worst" choices by key/label heuristics WITHOUT changing story text.
+    # We count only clearly "bad" picks among existing choices.
+    # - extra: ignore is always bad.
+    # - outfits: these are the ones you already set as more ominous/harmful.
+    #   (By key per stage + label patterns)
+    if opt.key == "ignore":
+        ss.worst_count += 1
+    # stage-specific worst outfit picks (using exact labels already in your script)
+    if "이상하게 젖은 옷" in opt.label:
+        ss.worst_count += 1
+    if "다 뒤덮인 더러운 색" in opt.label:
+        ss.worst_count += 1
+    if "맨발" in opt.label:
+        ss.worst_count += 1
+
+
+# ----------------------------
+# Ending conditions (UPDATED)
+# ----------------------------
 
 def compute_ending() -> str:
-    flags = st.session_state.flags
-    ignored = flags.get("ignored_warnings", 0)
-    stayed = flags.get("stayed_home", False)
+    """
+    New logic based on:
+    - A: acted with enough caution / awareness
+    - B: ignored warnings quite a lot
+    - C: worst choices accumulated
+    Using existing choices/flags without changing text.
+    """
+    ss = st.session_state
+    ignored = ss.flags.get("ignored_warnings", 0)
+    worst = ss.worst_count
 
-    if ignored <= 1 and stayed:
-        return "A"
-    if ignored >= 4:
+    # "C": worst choices piled up
+    # (ignore + very bad outfit picks)
+    if worst >= 4:
         return "C"
+
+    # "A": enough caution:
+    # chose to check/lock or stayed home and didn't ignore too much
+    cautious_signals = 0
+    if ss.flags.get("checked_door"):
+        cautious_signals += 1
+    if ss.flags.get("looked_window"):
+        cautious_signals += 1
+    if ss.flags.get("stayed_home"):
+        cautious_signals += 2  # stronger caution
+
+    if cautious_signals >= 2 and ignored <= 1 and worst <= 1:
+        return "A"
+
+    # otherwise B
     return "B"
 
 
@@ -405,7 +469,9 @@ def maybe_proceed_to_outcome(stage: Stage):
     Rule:
     - If stage has extra_choices: user MUST pick one extra AND one outfit before moving on.
     - If stage has no extra_choices: only outfit pick is required.
-    Once required picks are done, we build a combined outcome message and move to outcome scene.
+    Outcome rule (already applied in your code):
+    - If stage has extra choices, show ONLY the ominous outcome in outcome scene.
+    - Otherwise show outfit outcome.
     """
     ss = st.session_state
     need_extra = stage.extra_choices is not None and len(stage.extra_choices) > 0
@@ -414,12 +480,6 @@ def maybe_proceed_to_outcome(stage: Stage):
         return
     if (not need_extra) and (ss.picked_outfit is None):
         return
-
-    # Outcome rule:
-    # - If stage has extra choices (ominous + outfit together),
-    #   show ONLY the ominous outcome in the outcome scene.
-    # - Otherwise (no extra choices), show the outfit outcome.
-    need_extra = stage.extra_choices is not None and len(stage.extra_choices) > 0
 
     if need_extra and ss.picked_extra is not None:
         ss.last_outcome = ss.picked_extra.outcome or "…"
@@ -437,6 +497,94 @@ def maybe_proceed_to_outcome(stage: Stage):
 
     ss.scene = "outcome"
     st.rerun()
+
+
+# ----------------------------
+# NEW: Idle effects (shake + banner flash)
+# ----------------------------
+
+def inject_idle_effects(enable: bool, flash_after_ms: int = 4200, flash_duration_ms: int = 750):
+    """
+    - enable=True only on 'ominous situations' (i.e., extra_choices present on choose screen)
+    - After flash_after_ms of no clicks, show "아직이야?" on banner briefly, then hide.
+    - Also toggle a CSS class on <body> to make buttons subtly shake while idle.
+
+    Notes:
+    - Streamlit is server-driven; we use a small client-side script to:
+      1) apply/remove body class
+      2) temporarily replace banner text
+    """
+    if not enable:
+        st.markdown(
+            "<script>document.body.classList.remove('shake-mode');</script>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    # We need an element we can target; we add id="bannerText" when rendering the banner.
+    # Then JS can swap text for a moment.
+    st.markdown(
+        f"""
+        <script>
+        (function() {{
+          // prevent multiple timers stacking
+          if (window.__idleFxInstalled) return;
+          window.__idleFxInstalled = true;
+
+          let lastActivity = Date.now();
+
+          function markActivity() {{
+            lastActivity = Date.now();
+            // keep shaking while user is idle on this screen
+            document.body.classList.add('shake-mode');
+
+            // restore banner if it was flashed
+            const bt = document.getElementById('bannerText');
+            if (bt && bt.dataset && bt.dataset.original) {{
+              bt.textContent = bt.dataset.original;
+            }}
+          }}
+
+          // treat clicks/taps/keys as activity
+          window.addEventListener('click', markActivity, true);
+          window.addEventListener('keydown', markActivity, true);
+
+          // initial
+          document.body.classList.add('shake-mode');
+          markActivity();
+
+          // periodic checker
+          setInterval(function() {{
+            const now = Date.now();
+            const idle = now - lastActivity;
+
+            const bt = document.getElementById('bannerText');
+            if (bt) {{
+              if (!bt.dataset.original) {{
+                bt.dataset.original = bt.textContent;
+              }}
+            }}
+
+            // flash "아직이야?" if idle long enough
+            if (idle >= {flash_after_ms} && bt) {{
+              const original = bt.dataset.original || bt.textContent;
+              bt.textContent = "아직이야?";
+
+              setTimeout(function() {{
+                // revert back
+                const bt2 = document.getElementById('bannerText');
+                if (bt2) bt2.textContent = original;
+              }}, {flash_duration_ms});
+
+              // bump lastActivity so it doesn't spam every interval
+              lastActivity = now + 999999; // effectively stop until rerender
+            }}
+          }}, 350);
+        }})();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ----------------------------
@@ -499,17 +647,22 @@ def render_note(stage: Stage):
 
 def render_choose(stage: Stage):
     ss = st.session_state
+    is_78 = stage.stage_num in (7, 8)
 
     # Extra choice block (ominous)
     if stage.extra_choices:
         banner = stage.extra_banner or "…"
+        # IMPORTANT: add id bannerText for JS to swap text
         st.markdown(
-    f"<div class='card'>"
-    f"<div class='banner'>{escape_html(banner)}</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
+            f"<div class='card'>"
+            f"<div class='banner' id='bannerText'>{escape_html(banner)}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
         st.markdown("")
+
+        # (1)(2) idle effects only when ominous block exists AND user is on choose screen
+        inject_idle_effects(enable=True)
 
         cols = st.columns(len(stage.extra_choices))
         for i, opt in enumerate(stage.extra_choices):
@@ -517,47 +670,61 @@ def render_choose(stage: Stage):
                 label = opt.label
                 picked = (ss.picked_extra is not None and ss.picked_extra.key == opt.key)
                 if st.button(("✅ " if picked else "") + label, key=f"extra_{stage.stage_num}_{opt.key}"):
+                    # any click should stop shaking on next rerun; also reset js guard by page reload
                     ss.picked_extra = opt
                     apply_effects(opt)
+                    # allow JS to reinstall on rerun
+                    st.markdown("<script>window.__idleFxInstalled=false;</script>", unsafe_allow_html=True)
                     maybe_proceed_to_outcome(stage)
 
         st.markdown("")
+    else:
+        inject_idle_effects(enable=False)
 
     # Outfit prompt
-    st.markdown(
-        f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div>"
-        f"<div class='muted' style='margin-top:6px;'>"
-        f"{'✅ 옷 선택 완료' if ss.picked_outfit else '옷을 1개 골라줘.'}"
-        f"</div></div>",
-        unsafe_allow_html=True,
-    )
+    # (3) Stage 7/8: remove "옷을 1개 골라줘" guidance text line
+    if not is_78:
+        st.markdown(
+            f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div>"
+            f"<div class='muted' style='margin-top:6px;'>"
+            f"{'✅ 옷 선택 완료' if ss.picked_outfit else '옷을 1개 골라줘.'}"
+            f"</div></div>",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div></div>",
+            unsafe_allow_html=True,
+        )
     st.markdown("")
 
-    # Outfit options 1..4
+    # Outfit options
     cols = st.columns(2)
     slot_cols = [cols[0], cols[1], cols[0], cols[1]]
 
     for idx, opt in enumerate(stage.options, start=1):
         with slot_cols[idx - 1]:
-            path = stage_asset_path(stage.stage_num, idx)
-            if os.path.exists(path):
-                st.image(path, use_container_width=True)
-            else:
-                st.markdown(
-                    f"<div class='card'><div style='font-weight:900;'>선택 {idx}</div>"
-                    f"<div class='muted'>이미지: assets/stage{stage.stage_num}_{idx}.png</div></div>",
-                    unsafe_allow_html=True,
-                )
+            # (3) Stage 7/8: no images, buttons only
+            if not is_78:
+                path = stage_asset_path(stage.stage_num, idx)
+                if os.path.exists(path):
+                    st.image(path, use_container_width=True)
+                else:
+                    st.markdown(
+                        f"<div class='card'><div style='font-weight:900;'>선택 {idx}</div>"
+                        f"<div class='muted'>이미지: assets/stage{stage.stage_num}_{idx}.png</div></div>",
+                        unsafe_allow_html=True,
+                    )
 
             picked = (ss.picked_outfit is not None and ss.picked_outfit.key == opt.key)
             if st.button(("✅ " if picked else "") + opt.label, key=f"opt_{stage.stage_num}_{opt.key}"):
                 ss.picked_outfit = opt
                 apply_effects(opt)
+                st.markdown("<script>window.__idleFxInstalled=false;</script>", unsafe_allow_html=True)
                 maybe_proceed_to_outcome(stage)
 
 
 def render_outcome():
-    # Show ONLY combined outcome
     text = st.session_state.last_outcome or "…"
     st.markdown(
         f"<div class='card'><div class='outcome'>{escape_html(text)}</div></div>",
@@ -612,6 +779,7 @@ def render_gameover():
                 "stayed_home": False,
                 "ignored_warnings": 0,
             }
+            st.session_state.worst_count = 0
             st.session_state.last_outcome = ""
             st.session_state.gameover_reason = ""
             st.session_state.ending_key = ""
@@ -655,7 +823,6 @@ scene = st.session_state.scene
 stage_num = st.session_state.stage
 stage = STAGES.get(stage_num, STAGES[1])
 
-# Router: render ONLY current scene
 if scene == "title":
     render_title()
 elif scene == "note":
@@ -671,4 +838,3 @@ elif scene == "ending":
 else:
     reset_game()
     st.rerun()
-
