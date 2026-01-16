@@ -233,9 +233,9 @@ def make_stages() -> Dict[int, Stage]:
         note_text="안녕! 오늘은 정말 중요한 날이야 💕\n데이트 준비를 도와줄래?\n먼저 옷부터 골라보자!",
         prompt="오늘은 테니스를 치러 갈 거니까 🎾\n스포티하면서도 귀여운 룩으로 부탁해!",
         options=[
-            Option("1", "1번: 스포티 핑크 셋업", "꺄! 이거 완전 내 스타일이야 💗", darkness_delta=0),
-            Option("2", "2번: 화이트 테니스 원피스", "깔끔하고 예쁘다… 오늘은 이걸로 😊", darkness_delta=0),
-            Option("3", "3번: 블랙 트랙수트", "음… 조금 강해 보이지만, 괜찮겠지?", darkness_delta=1, add_ignore=1),
+            Option("1", "1번: 스포티 셋업", "꺄! 이거 완전 내 스타일이야 💗", darkness_delta=0),
+            Option("2", "2번: 테니스 원피스", "깔끔하고 예쁘다… 오늘은 이걸로 😊", darkness_delta=0),
+            Option("3", "3번: 트랙수트", "음… 조금 강해 보이지만, 괜찮겠지?", darkness_delta=1, add_ignore=1),
             Option("4", "4번: 두꺼운 후드 + 모자", "뭔가 숨기고 싶을 때 입는 옷 같아…", darkness_delta=1, add_ignore=1),
         ],
     )
@@ -244,17 +244,17 @@ def make_stages() -> Dict[int, Stage]:
         2,
         note_text="생각해보니까…\n약속 시간보다 조금 일찍 준비해도 괜찮겠지? 😊\n오늘은 왠지 기분이 좋아.",
         prompt="가벼운 아우터를 입을까 말까 고민 중이야!",
-        extra_note_flash="현관 쪽에서… 소리가 난 것 같았어.",
-        extra_banner="방금… 들었어?\n귀여운 소리였는데, 왜 싫지.",
+        extra_note_flash="현관 쪽에서… 발소리가 난 것 같았어.",
+        extra_banner="방금… 들었어? 되게 기분 나쁘다.",
         extra_choices=[
             Option("door_peek", "문을 확인한다", "잠깐… 문고리가 차갑네. 그래도 닫혀 있어.", darkness_delta=1, set_flag=flag_checked_door),
             Option("ignore", "무시한다", "착각이겠지. 귀찮아…", darkness_delta=1, add_ignore=1),
         ],
         options=[
             Option("1", "1번: 리본 달린 바람막이", "귀엽다! 바람이 불어도 괜찮겠어 🎀", darkness_delta=0),
-            Option("2", "2번: 가디건 + 테니스 스커트", "따뜻하고 예쁘네. 좋아!", darkness_delta=0),
-            Option("3", "3번: 얇은 재킷", "조금… 무겁다. 그래도 입을까?", darkness_delta=1),
-            Option("4", "4번: 아우터 안 입기", "괜찮아. 나갈 때만… 빨리 나가면 돼.", darkness_delta=1, add_ignore=1),
+            Option("2", "2번: 가디건", "따뜻하고 예쁘네. 좋아!", darkness_delta=0),
+            Option("3", "3번: 두꺼운 재킷", "조금… 무겁다. 그래도 입을까?", darkness_delta=1),
+            Option("4", "4번: 아우터 안 입기", "괜찮아. 별로 춥지도 않았어.", darkness_delta=1, add_ignore=1),
         ],
     )
 
@@ -262,9 +262,9 @@ def make_stages() -> Dict[int, Stage]:
         3,
         note_text="방금 말한 소리 말이야…\n아마 착각이겠지? 😅\n그래도 옷은 제대로 골라야지!",
         prompt="치마가 좋을까? 반바지가 좋을까?",
-        extra_banner="문이… 아까랑 똑같이 보이니?\n난 아닌 것 같아.",
+        extra_banner="계속 문을 쳐다보게 돼. 기분이 나빠.",
         extra_choices=[
-            Option("door_check", "문을 다시 잠근다", "잠금 소리가 크게 울렸어. 너무 크게…", darkness_delta=1, set_flag=flag_checked_door),
+            Option("door_check", "문을 다시 잠근다", "일단 잠궜어. 그나마 기분이 나아졌어.", darkness_delta=1, set_flag=flag_checked_door),
             Option("ignore", "무시한다", "응. 아무 일도 없을 거야.", darkness_delta=1, add_ignore=1),
         ],
         options=[
@@ -277,18 +277,18 @@ def make_stages() -> Dict[int, Stage]:
 
     s[4] = Stage(
         4,
-        note_text="아까 문 말이야…\n분명 닫아놨던 것 같은데 🤔\n뭐, 상관없겠지?",
-        prompt="오늘 기분에 맞는 색을 골라줘.",
-        extra_banner="너는 ‘상관없다’는 말을\n몇 번까지 할 수 있어?",
+        note_text="아까 문 말이야…\n분명 닫아놨던 것 같은데 🤔\n 괜히 기분이 찜찜하네",
+        prompt="인스타에 OOTD 스토리 올릴 건데, 테마는 뭘로 할까?",
+        extra_banner="계속 어디에서 숨소리가 들리는 것 같아...",
         extra_choices=[
-            Option("listen", "문 쪽에 귀를 댄다", "…무슨 소리도 안 나. 너무 조용해.", darkness_delta=2),
+            Option("listen", "문 쪽에 귀를 댄다", "… 갑자기 무슨 소리도 안 나. 너무 조용해.", darkness_delta=2),
             Option("ignore", "무시한다", "응. 귀찮아…", darkness_delta=1, add_ignore=1),
         ],
         options=[
             Option("1", "1번: 핑크 포인트", "역시 핑크지! 오늘은 완벽해 💗", darkness_delta=0),
             Option("2", "2번: 화이트 톤", "깨끗해. 마음이 편해져.", darkness_delta=0),
-            Option("3", "3번: 블랙 포인트", "…왜 갑자기 어두운 색이 끌리지?", darkness_delta=1),
-            Option("4", "4번: 색이 바랜 옷", "이 옷… 예전부터 있던 건가? 기억이 안 나.", darkness_delta=2, add_ignore=1),
+            Option("3", "3번: 블랙 포인트", "어두운 색이 끌릴 때도 있지.", darkness_delta=1),
+            Option("4", "4번: "다 뒤덮인 더러운 색", "웩, 진심이야?", darkness_delta=2, add_ignore=1),
         ],
     )
 
@@ -296,7 +296,7 @@ def make_stages() -> Dict[int, Stage]:
         5,
         note_text="창문 쪽이 조금… 이상해.\n커튼을 닫아둘까?",
         prompt="액세서리를 고를까? (가벼운 것만!)",
-        extra_banner="창문은 거울이야.\n밖이 아니라, ‘안’을 보여줘.",
+        extra_banner="안을 훤히 들여다보기 좋은 구도야.\n....이런 불길한 생각은 그만 하고 싶은데.",
         extra_choices=[
             Option("window", "창문을 본다", "유리 너머로… 뭔가가 지나간 것 같아.", darkness_delta=2, set_flag=flag_looked_window),
             Option("curtain", "커튼을 닫는다", "커튼이 닫히는 소리가, 너무 크게 들려.", darkness_delta=1),
@@ -305,7 +305,7 @@ def make_stages() -> Dict[int, Stage]:
         options=[
             Option("1", "1번: 하트 헤어핀", "귀엽지? 오늘은 내 날이야 💕", darkness_delta=0),
             Option("2", "2번: 테니스 캡", "스포티! 햇빛도 가려주고 좋아.", darkness_delta=0),
-            Option("3", "3번: 목을 가리는 초커", "목이… 시려. 왜지?", darkness_delta=2),
+            Option("3", "3번: 목을 가리는 초커", "왠지 모르게 등골이 오싹해.", darkness_delta=2),
             Option("4", "4번: 아무것도 안 한다", "꾸미는 게… 의미가 있을까?", darkness_delta=2, add_ignore=1),
         ],
     )
@@ -314,7 +314,7 @@ def make_stages() -> Dict[int, Stage]:
         6,
         note_text="…\n그냥 집에 있으면 안 될까?\n네가 정해줘.",
         prompt="나갈까? 말까?",
-        extra_banner="밖은 밝아.\n그래서 더 잘 보여.",
+        extra_banner="밖은 공터야.\n그래서 더 잘 보여.",
         extra_choices=[
             Option("go_out", "그래도 나간다", "응… 약속은 약속이니까.", darkness_delta=2),
             Option("stay", "집에 남아 있는다", "문을 다시 잠그자. 숨을 크게 쉬자.", darkness_delta=2, set_flag=flag_stayed_home),
@@ -330,12 +330,12 @@ def make_stages() -> Dict[int, Stage]:
     s[7] = Stage(
         7,
         note_text="방 안에\n다른 숨소리가 있어.",
-        prompt="이제 선택은… 옷이 아니야.",
-        extra_banner="너의 숨은 규칙이었어.\n이제는 ‘신호’야.",
+        prompt="이제 옷이 문제가 아냐.",
+        extra_banner="제발제발제발제발제발제발",
         extra_choices=[
             Option("open", "문을 연다", "문이 열리는 순간, 공기가 바뀐다.", game_over=True, game_over_reason="문 밖에서 누군가 웃고 있었어.", darkness_delta=3),
-            Option("lights", "불을 끈다", "깜깜해지자… 더 가까워진다.", game_over=True, game_over_reason="어둠 속에서 네 이름을 불렀어.", darkness_delta=3),
-            Option("lock", "문을 잠근다", "딸깍. 하지만 잠금이… 믿음직하지 않아.", darkness_delta=3),
+            Option("lights", "불을 끈다", "깜깜해지자… 더 가까워진다.", game_over=True, game_over_reason="어둠 속에서 누군가 내 이름을 불렀어.", darkness_delta=3),
+            Option("lock", "문을 잠근다", "잠금이… 믿음직하지 않아.", darkness_delta=3),
             Option("hold", "숨을 죽인다", "…(숨소리만 남는다)", darkness_delta=2),
         ],
         options=[
@@ -348,9 +348,9 @@ def make_stages() -> Dict[int, Stage]:
 
     s[8] = Stage(
         8,
-        note_text="마지막이야.\n끝을 고르자.",
+        note_text="난 끝이야.",
         prompt="루시는… 어디로 가야 할까?",
-        extra_banner="엔딩은 ‘선택’이 아니라\n‘기록’이야.",
+        extra_banner="제발제발제발제발제발제발.",
         extra_choices=[
             Option("end_a", "커튼 뒤에 숨는다", "조용히… 숨을 참는다.", darkness_delta=0),
             Option("end_b", "그대로 나간다", "밖은 조용했다. 너무 조용했다.", darkness_delta=0),
@@ -448,7 +448,7 @@ def render_title():
         """
         <div class="title-wrap">
           <div class="title">루시의 달콤살벌 데이트! 💗</div>
-          <div class="subtitle">핑크는 언제나 안전…하다고 믿고 싶지?</div>
+          <div class="subtitle">루시의 데이트 준비를 도와주세요!</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -623,13 +623,13 @@ def render_ending():
 
     if key == "A":
         title = "ENDING A"
-        text = "루시는 결국 약속에 가지 않았다.\n밖은 조용했다.\n너무 조용했다."
+        text = "루시는 결국 약속에 가지 않았고, 경찰을 불렀다.\n밖은 비로소 조용해졌다."
     elif key == "C":
         title = "ENDING C"
-        text = "루시는 옷을 다 골랐다.\n이제… 숨을 곳이 없다."
+        text = "“루시, 내  사랑. 왜 계속 못 들은 척했어?”\n“내가 계속 밖에서 기다리고 있었는데.”"
     else:
         title = "ENDING B"
-        text = "“왜 계속 못 들은 척했어?”\n게임이 여기서 끝난다."
+        text = "루시는 끝까지 못 들은 척을 했다. \n하지만 어디에선가, 옷장 쪽에서, 계속... 누군가의 숨소리가 들려 온다."
 
     st.markdown(
         f"<div class='card'><div style='font-weight:950; font-size:24px;'>{title}</div>"
