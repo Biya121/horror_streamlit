@@ -1,4 +1,4 @@
-# app.py
+ㄹ# app.py
 # "루시의 달콤살벌 데이트!" - Streamlit Horror Text Adventure
 #
 # Changes in this version:
@@ -247,7 +247,7 @@ def make_stages() -> Dict[int, Stage]:
         extra_note_flash="현관 쪽에서… 발소리가 난 것 같았어.",
         extra_banner="방금… 들었어? 되게 기분 나쁘다.",
         extra_choices=[
-            Option("door_peek", "문을 확인한다", "잠깐… 문고리가 차갑네. 그래도 닫혀 있어.", darkness_delta=1, set_flag=flag_checked_door),
+            Option("door_peek", "문을 확인한다", "잠깐… 문고리가 따뜻해.", darkness_delta=1, set_flag=flag_checked_door),
             Option("ignore", "무시한다", "착각이겠지. 귀찮아…", darkness_delta=1, add_ignore=1),
         ],
         options=[
