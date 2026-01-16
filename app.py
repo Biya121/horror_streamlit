@@ -1,13 +1,12 @@
 # app.py
-# Streamlit horror text adventure: "루시의 달콤살벌 데이트!"
-# Requirements covered:
-# - Title screen: pink polka dot, centered cute header, two buttons
-# - Stage flow (8 stages): sticky-note message -> choices (1~4) + occasional extra choices
-# - Progressively darker atmosphere (CSS based on darkness)
-# - Minimal UI: text + buttons + optional images (placeholder ready)
-# - Choice buttons disappear after selection (state + rerun)
-# - Log: typewriter-ish reveal + stacked lines (max 5)
-# - Game over: show jumpscare.png (kept as-is)
+# "루시의 달콤살벌 데이트!" - Streamlit Horror Text Adventure
+# Fixes applied:
+# 1) After selecting a button, previous scripts (note/prompt/choices) do NOT remain on screen.
+#    - We render ONLY the current scene.
+#    - After any selection, we switch scene and rerun immediately.
+# 2) Replace ".... 선택지가 하나 더 생겼다." -> "점점 무서워지고 있어"
+# 3) Add space for a title image between title and buttons on the first screen.
+#    - If title.png exists (./title.png or ./assets/title.png), it will display automatically.
 
 import os
 import time
@@ -16,8 +15,9 @@ from typing import Dict, List, Optional, Callable, Any
 
 import streamlit as st
 
+
 # ----------------------------
-# Helpers: UI + State
+# State
 # ----------------------------
 
 def init_state():
@@ -27,7 +27,7 @@ def init_state():
     if "stage" not in ss:
         ss.stage = 1
     if "darkness" not in ss:
-        ss.darkness = 0  # 0..8
+        ss.darkness = 0  # 0..8 (higher = darker)
     if "flags" not in ss:
         ss.flags = {
             "checked_door": False,
@@ -35,36 +35,29 @@ def init_state():
             "stayed_home": False,
             "ignored_warnings": 0,
         }
-    if "log" not in ss:
-        ss.log = []
-    if "last_choice" not in ss:
-        ss.last_choice = None
-    if "stage_choice_locked" not in ss:
-        ss.stage_choice_locked = False
-    if "pending_text" not in ss:
-        ss.pending_text = ""  # for typewriter reveal
+    if "last_outcome" not in ss:
+        ss.last_outcome = ""          # outcome text to show on outcome scene
     if "gameover_reason" not in ss:
         ss.gameover_reason = ""
     if "ending_key" not in ss:
         ss.ending_key = ""
 
-def push_log(line: str):
-    ss = st.session_state
-    ss.log.append(line)
-    # keep only last 5
-    ss.log = ss.log[-5:]
 
-def typewriter(line: str, speed: float = 0.012):
-    """Typewriter-like reveal. Keeps the revealed line as one log entry at the end."""
-    # Streamlit reruns make "true" typewriter tricky; we do a single-run reveal with placeholder.
-    placeholder = st.empty()
-    out = ""
-    for ch in line:
-        out += ch
-        placeholder.markdown(f"<div class='log-line'>{escape_html(out)}</div>", unsafe_allow_html=True)
-        time.sleep(speed)
-    placeholder.empty()
-    push_log(line)
+def reset_game():
+    ss = st.session_state
+    ss.scene = "title"
+    ss.stage = 1
+    ss.darkness = 0
+    ss.flags = {
+        "checked_door": False,
+        "looked_window": False,
+        "stayed_home": False,
+        "ignored_warnings": 0,
+    }
+    ss.last_outcome = ""
+    ss.gameover_reason = ""
+    ss.ending_key = ""
+
 
 def escape_html(s: str) -> str:
     return (
@@ -75,15 +68,14 @@ def escape_html(s: str) -> str:
          .replace("'", "&#039;")
     )
 
-def apply_theme(darkness: int, scene: str):
-    """
-    darkness: 0 (cute pink) -> 8 (near-black)
-    We'll gradually shift background and reduce saturation.
-    """
-    # clamp
+
+# ----------------------------
+# Theme (pink -> dark)
+# ----------------------------
+
+def apply_theme(darkness: int):
     d = max(0, min(8, int(darkness)))
-    # gradient: pink to dark
-    # We keep polka dots most visible at low darkness and fade them out.
+
     bg_base = [
         "#ffe6f3", "#ffd6ee", "#f7c9e6", "#e8b4d4",
         "#c88aa9", "#8a5a70", "#3a2a33", "#141014", "#070607"
@@ -94,11 +86,9 @@ def apply_theme(darkness: int, scene: str):
     note_bg = ["#ffd9ec", "#ffd0e8", "#ffc4e2", "#ffb9dc", "#3a2a33", "#2a2026", "#20171d", "#161017", "#100b12"][d]
     note_text = ["#2b1b24", "#2b1b24", "#2b1b24", "#2b1b24", "#f2e9ef", "#f2e9ef", "#f2e9ef", "#f2e9ef", "#f2e9ef"][d]
 
-    # Minimal layout container widths
     st.markdown(
         f"""
         <style>
-        /* page */
         .stApp {{
           background:
             radial-gradient(circle at 18px 18px, rgba(255,255,255,{dot_opacity}) 2px, transparent 2.5px),
@@ -108,13 +98,11 @@ def apply_theme(darkness: int, scene: str):
           color: {text_color};
         }}
 
-        /* center main */
         section.main > div {{
-          max-width: 780px;
+          max-width: 820px;
           padding-top: 32px;
         }}
 
-        /* title */
         .title-wrap {{
           text-align: center;
           margin-top: 10px;
@@ -122,7 +110,7 @@ def apply_theme(darkness: int, scene: str):
         }}
         .title {{
           font-size: 42px;
-          font-weight: 800;
+          font-weight: 900;
           letter-spacing: -0.5px;
           line-height: 1.1;
         }}
@@ -132,30 +120,12 @@ def apply_theme(darkness: int, scene: str):
           font-size: 14px;
         }}
 
-        /* log */
-        .log-box {{
-          border-radius: 16px;
-          padding: 14px 16px;
-          background: rgba(0,0,0,0.12);
-          backdrop-filter: blur(6px);
-          margin: 14px 0 10px 0;
-        }}
-        .log-line {{
-          font-size: 16px;
-          line-height: 1.5;
-          margin: 2px 0;
-          color: {text_color};
-          white-space: pre-wrap;
-        }}
-
-        /* sticky note */
         .note {{
           background: {note_bg};
           color: {note_text};
-          border-radius: 14px;
+          border-radius: 16px;
           padding: 18px 18px;
           box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-          transform: rotate(-0.4deg);
           margin: 10px 0 12px 0;
           border: 1px solid rgba(255,255,255,0.18);
         }}
@@ -166,7 +136,6 @@ def apply_theme(darkness: int, scene: str):
           white-space: pre-wrap;
         }}
 
-        /* card */
         .card {{
           background: {card_bg};
           border-radius: 16px;
@@ -174,37 +143,34 @@ def apply_theme(darkness: int, scene: str):
           border: 1px solid rgba(255,255,255,0.14);
           box-shadow: 0 8px 22px rgba(0,0,0,0.16);
         }}
+
         .muted {{
-          opacity: 0.82;
+          opacity: 0.85;
           font-size: 13px;
+          white-space: pre-wrap;
         }}
 
-        /* buttons */
+        .outcome {{
+          font-size: 18px;
+          line-height: 1.7;
+          white-space: pre-wrap;
+        }}
+
         div.stButton > button {{
           width: 100%;
           border-radius: 14px;
           padding: 12px 12px;
-          font-weight: 700;
+          font-weight: 800;
           border: 1px solid rgba(255,255,255,0.18);
         }}
 
-        /* remove extra padding top in some scenes */
+        /* Make the page feel minimal */
+        header, footer {{ visibility: hidden; }}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-def render_log():
-    ss = st.session_state
-    lines = ss.log[-5:]
-    html = "<div class='log-box'>" + "".join(
-        [f"<div class='log-line'>{escape_html(l)}</div>" for l in lines]
-    ) + "</div>"
-    st.markdown(html, unsafe_allow_html=True)
-
-def stage_asset_path(stage: int, option_idx: int) -> str:
-    # Optional: place images like assets/stage1_1.png etc.
-    return os.path.join("assets", f"stage{stage}_{option_idx}.png")
 
 # ----------------------------
 # Story Data
@@ -221,6 +187,7 @@ class Option:
     game_over: bool = False
     game_over_reason: str = ""
 
+
 @dataclass
 class Stage:
     stage_num: int
@@ -228,9 +195,12 @@ class Stage:
     prompt: str
     options: List[Option] = field(default_factory=list)
     extra_note_flash: Optional[str] = None
-    extra_choices: Optional[List[Option]] = None  # shown above outfit options (stage >=2)
-    # If stage has special logic when arriving:
-    on_enter: Optional[Callable[[Dict[str, Any]], None]] = None
+    extra_choices: Optional[List[Option]] = None
+
+
+def stage_asset_path(stage: int, option_idx: int) -> str:
+    return os.path.join("assets", f"stage{stage}_{option_idx}.png")
+
 
 def make_stages() -> Dict[int, Stage]:
     def flag_checked_door(flags): flags["checked_door"] = True
@@ -274,7 +244,7 @@ def make_stages() -> Dict[int, Stage]:
         prompt="치마가 좋을까? 반바지가 좋을까?",
         extra_choices=[
             Option("door_check", "문을 다시 잠근다", "잠금 소리가 크게 울렸어. 너무 크게…", darkness_delta=1, set_flag=flag_checked_door),
-            Option("ignore", "무시하고 고른다", "응. 아무 일도 없을 거야.", darkness_delta=1, add_ignore=1),
+            Option("ignore", "무시한다", "응. 아무 일도 없을 거야.", darkness_delta=1, add_ignore=1),
         ],
         options=[
             Option("1", "1번: 플리츠 스커트", "움직이기 편하고 귀여워! 💕", darkness_delta=0),
@@ -370,105 +340,53 @@ def make_stages() -> Dict[int, Stage]:
 
     return stages
 
+
 STAGES = make_stages()
 
+
 # ----------------------------
-# Game Flow
+# Logic
 # ----------------------------
 
-def reset_game():
+def apply_option(opt: Option):
     ss = st.session_state
-    ss.scene = "title"
-    ss.stage = 1
-    ss.darkness = 0
-    ss.flags = {"checked_door": False, "looked_window": False, "stayed_home": False, "ignored_warnings": 0}
-    ss.log = []
-    ss.last_choice = None
-    ss.stage_choice_locked = False
-    ss.pending_text = ""
-    ss.gameover_reason = ""
-    ss.ending_key = ""
 
-def go_to(scene: str):
-    st.session_state.scene = scene
-    st.rerun()
+    # flags
+    if opt.set_flag is not None:
+        opt.set_flag(ss.flags)
 
-def apply_option(option: Option):
-    ss = st.session_state
-    # apply flags
-    if option.set_flag is not None:
-        option.set_flag(ss.flags)
-    if option.add_ignore:
-        ss.flags["ignored_warnings"] += option.add_ignore
-    ss.darkness = min(8, ss.darkness + option.darkness_delta)
+    if opt.add_ignore:
+        ss.flags["ignored_warnings"] += opt.add_ignore
 
-    ss.last_choice = option.label
-    # outcome into log with typewriter
-    typewriter(option.outcome, speed=0.010 if ss.darkness < 5 else 0.007)
+    ss.darkness = min(8, ss.darkness + opt.darkness_delta)
 
-    # handle game over
-    if option.game_over:
-        ss.gameover_reason = option.game_over_reason or "…"
+    # Store outcome text for "outcome scene only"
+    ss.last_outcome = opt.outcome
+
+    if opt.game_over:
+        ss.gameover_reason = opt.game_over_reason or "…"
         ss.scene = "gameover"
         st.rerun()
 
-def choose_outfit(stage: Stage):
-    ss = st.session_state
+    ss.scene = "outcome"
+    st.rerun()
 
-    # Optional extra choices (above outfit choices)
-    if stage.extra_choices:
-        st.markdown("<div class='card'><div class='muted'>…선택지가 하나 더 생겼다.</div></div>", unsafe_allow_html=True)
-        cols = st.columns(len(stage.extra_choices))
-        for i, opt in enumerate(stage.extra_choices):
-            with cols[i]:
-                # Only show if not locked
-                if not ss.stage_choice_locked and st.button(opt.label, key=f"extra_{stage.stage_num}_{opt.key}"):
-                    ss.stage_choice_locked = True
-                    apply_option(opt)
-                    # after outcome, return to choose screen to pick outfit
-                    ss.stage_choice_locked = False
-                    st.rerun()
-
-        st.markdown("")
-
-    # Outfit prompt
-    st.markdown(f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div></div>", unsafe_allow_html=True)
-    st.markdown("")
-
-    # Outfit options 1..4
-    cols = st.columns(2)
-    option_cols = [cols[0], cols[1], cols[0], cols[1]]
-    for idx, opt in enumerate(stage.options, start=1):
-        with option_cols[idx - 1]:
-            # Optional image if present
-            path = stage_asset_path(stage.stage_num, idx)
-            if os.path.exists(path):
-                st.image(path, use_container_width=True)
-            else:
-                # placeholder block
-                st.markdown(
-                    f"<div class='card'><div style='font-weight:800;'>선택 {idx}</div>"
-                    f"<div class='muted'>이미지 자리: assets/stage{stage.stage_num}_{idx}.png</div></div>",
-                    unsafe_allow_html=True,
-                )
-            if not ss.stage_choice_locked:
-                if st.button(opt.label, key=f"opt_{stage.stage_num}_{opt.key}"):
-                    ss.stage_choice_locked = True
-                    apply_option(opt)
-                    ss.scene = "outcome"
-                    st.rerun()
 
 def compute_ending() -> str:
     flags = st.session_state.flags
     ignored = flags.get("ignored_warnings", 0)
     stayed = flags.get("stayed_home", False)
 
-    # Simple ending logic (tweakable)
     if ignored <= 1 and stayed:
-        return "A"  # 조심 + 숨기기
+        return "A"
     if ignored >= 4:
-        return "C"  # 위험 누적
-    return "B"      # 무난하지만 찝찝
+        return "C"
+    return "B"
+
+
+# ----------------------------
+# Renderers (IMPORTANT: render ONLY current scene)
+# ----------------------------
 
 def render_title():
     st.markdown(
@@ -480,10 +398,25 @@ def render_title():
         """,
         unsafe_allow_html=True,
     )
+
+    # (3) Space for title image between title and buttons
+    title_img_candidates = ["title.png", os.path.join("assets", "title.png")]
+    img_path = next((p for p in title_img_candidates if os.path.exists(p)), None)
+
+    # Always reserve space; show image if exists, else show a minimal placeholder card
+    if img_path:
+        st.image(img_path, use_container_width=True)
+    else:
+        st.markdown(
+            "<div class='card'><div class='muted'>타이틀 이미지 자리 (파일을 넣으면 자동 표시돼요)\n- title.png 또는 assets/title.png</div></div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("")  # spacing
+
     c1, c2 = st.columns(2)
     with c1:
         if st.button("💗 데이트 준비 시작하기", key="start_btn"):
-            push_log("루시: 안녕! 오늘은 정말 중요한 날이야 💕")
             st.session_state.scene = "note"
             st.session_state.stage = 1
             st.rerun()
@@ -492,10 +425,10 @@ def render_title():
             st.markdown("<div class='card'>안녕… 다음에 또 놀자 💗</div>", unsafe_allow_html=True)
             st.stop()
 
+
 def render_note(stage: Stage):
-    # flash note line as extra (shows only on note screen)
     flash = ""
-    if stage.extra_note_flash and st.session_state.stage >= 2:
+    if stage.extra_note_flash and stage.stage_num >= 2:
         flash = f"\n\n(잠깐) {stage.extra_note_flash}"
 
     st.markdown(
@@ -503,44 +436,88 @@ def render_note(stage: Stage):
         unsafe_allow_html=True,
     )
 
-    render_log()
-
     if st.button("다음으로", key=f"to_choose_{stage.stage_num}"):
         st.session_state.scene = "choose"
         st.rerun()
 
+
 def render_choose(stage: Stage):
-    render_log()
-    choose_outfit(stage)
+    # Extra choices banner
+    if stage.extra_choices:
+        # (2) Replace text
+        st.markdown("<div class='card'><div class='muted'>점점 무서워지고 있어</div></div>", unsafe_allow_html=True)
+        st.markdown("")
 
-def render_outcome(stage: Stage):
-    # After choosing outfit, allow next stage
-    render_log()
+        cols = st.columns(len(stage.extra_choices))
+        for i, opt in enumerate(stage.extra_choices):
+            with cols[i]:
+                if st.button(opt.label, key=f"extra_{stage.stage_num}_{opt.key}"):
+                    apply_option(opt)
 
-    if stage.stage_num < 8:
-        if st.button("다음 스테이지", key=f"next_stage_{stage.stage_num}"):
+        st.markdown("")
+
+    # Outfit prompt
+    st.markdown(f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div></div>", unsafe_allow_html=True)
+    st.markdown("")
+
+    # Outfit options 1..4 (with optional images)
+    cols = st.columns(2)
+    slot_cols = [cols[0], cols[1], cols[0], cols[1]]
+
+    for idx, opt in enumerate(stage.options, start=1):
+        with slot_cols[idx - 1]:
+            path = stage_asset_path(stage.stage_num, idx)
+            if os.path.exists(path):
+                st.image(path, use_container_width=True)
+            else:
+                st.markdown(
+                    f"<div class='card'><div style='font-weight:900;'>선택 {idx}</div>"
+                    f"<div class='muted'>이미지: assets/stage{stage.stage_num}_{idx}.png</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+            # (1) As soon as clicked, we switch scenes and rerun -> previous scripts vanish
+            if st.button(opt.label, key=f"opt_{stage.stage_num}_{opt.key}"):
+                apply_option(opt)
+
+
+def render_outcome():
+    # outcome scene shows ONLY the outcome text (no previous note/prompt/choices)
+    text = st.session_state.last_outcome or "…"
+    st.markdown(
+        f"<div class='card'><div class='outcome'>{escape_html(text)}</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    stage_num = st.session_state.stage
+
+    if stage_num < 8:
+        if st.button("다음 스테이지", key=f"next_stage_{stage_num}"):
             st.session_state.stage += 1
             st.session_state.scene = "note"
-            st.session_state.stage_choice_locked = False
+            st.session_state.last_outcome = ""
             st.rerun()
     else:
-        # go to ending
         st.session_state.ending_key = compute_ending()
         st.session_state.scene = "ending"
+        st.session_state.last_outcome = ""
         st.rerun()
+
 
 def render_gameover():
     st.markdown("<div class='title-wrap'><div class='title'>…</div></div>", unsafe_allow_html=True)
-    render_log()
 
-    # jumpscare
     if os.path.exists("jumpscare.png"):
         st.image("jumpscare.png", use_container_width=True)
     else:
         st.markdown("<div class='card'>jumpscare.png 파일이 폴더에 없어요.</div>", unsafe_allow_html=True)
 
     reason = st.session_state.gameover_reason or "끝."
-    st.markdown(f"<div class='card'><div style='font-weight:800;'>GAME OVER</div><div class='muted'>{escape_html(reason)}</div></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='card'><div style='font-weight:900; font-size:22px;'>GAME OVER</div>"
+        f"<div class='muted'>{escape_html(reason)}</div></div>",
+        unsafe_allow_html=True,
+    )
 
     c1, c2 = st.columns(2)
     with c1:
@@ -549,32 +526,37 @@ def render_gameover():
             st.rerun()
     with c2:
         if st.button("다시 도전", key="retry"):
-            # retry from stage 1 but keep title scene?
             st.session_state.scene = "note"
             st.session_state.stage = 1
             st.session_state.darkness = 0
-            st.session_state.flags = {"checked_door": False, "looked_window": False, "stayed_home": False, "ignored_warnings": 0}
-            st.session_state.log = []
-            push_log("루시: …다시 시작하자.")
+            st.session_state.flags = {
+                "checked_door": False,
+                "looked_window": False,
+                "stayed_home": False,
+                "ignored_warnings": 0,
+            }
+            st.session_state.last_outcome = ""
+            st.session_state.gameover_reason = ""
+            st.session_state.ending_key = ""
             st.rerun()
+
 
 def render_ending():
     key = st.session_state.ending_key or "B"
-    render_log()
 
     if key == "A":
-        text = "루시는 결국 약속에 가지 않았다.\n밖은 조용했다.\n너무 조용했다."
         title = "ENDING A"
+        text = "루시는 결국 약속에 가지 않았다.\n밖은 조용했다.\n너무 조용했다."
     elif key == "C":
-        text = "루시는 옷을 다 골랐다.\n이제… 숨을 곳이 없다."
         title = "ENDING C"
+        text = "루시는 옷을 다 골랐다.\n이제… 숨을 곳이 없다."
     else:
-        text = "“왜 계속 못 들은 척했어?”\n게임이 여기서 끝난다."
         title = "ENDING B"
+        text = "“왜 계속 못 들은 척했어?”\n게임이 여기서 끝난다."
 
     st.markdown(
-        f"<div class='card'><div style='font-weight:900; font-size:22px;'>{title}</div>"
-        f"<div style='margin-top:10px; white-space:pre-wrap;'>{escape_html(text)}</div></div>",
+        f"<div class='card'><div style='font-weight:950; font-size:24px;'>{title}</div>"
+        f"<div class='outcome' style='margin-top:12px;'>{escape_html(text)}</div></div>",
         unsafe_allow_html=True,
     )
 
@@ -582,43 +564,32 @@ def render_ending():
         reset_game()
         st.rerun()
 
+
 # ----------------------------
-# App Entry
+# App
 # ----------------------------
 
 st.set_page_config(page_title="루시의 달콤살벌 데이트!", page_icon="💗", layout="centered")
-
 init_state()
-apply_theme(st.session_state.darkness, st.session_state.scene)
+apply_theme(st.session_state.darkness)
 
-# Title / Scene router
 scene = st.session_state.scene
 stage_num = st.session_state.stage
 stage = STAGES.get(stage_num, STAGES[1])
 
+# Router: render ONLY current scene
 if scene == "title":
     render_title()
-
 elif scene == "note":
-    # On stage enter: add a subtle log line only once per stage note entry
-    st.markdown("<div class='title-wrap'><div class='title'>💗</div></div>", unsafe_allow_html=True)
     render_note(stage)
-
 elif scene == "choose":
-    st.markdown("<div class='title-wrap'><div class='title'>옷장 열기…</div></div>", unsafe_allow_html=True)
     render_choose(stage)
-
 elif scene == "outcome":
-    st.markdown("<div class='title-wrap'><div class='title'>…</div></div>", unsafe_allow_html=True)
-    render_outcome(stage)
-
+    render_outcome()
 elif scene == "gameover":
     render_gameover()
-
 elif scene == "ending":
     render_ending()
-
 else:
-    # fallback
     reset_game()
     st.rerun()
