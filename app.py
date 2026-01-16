@@ -277,7 +277,7 @@ def make_stages() -> Dict[int, Stage]:
 
     s[4] = Stage(
         4,
-        note_text="아까 문 말이야…\n분명 닫아놨던 것 같은데 🤔\n 괜히 기분이 찜찜하네",
+        note_text="아까 문 말이야…\n분명 닫아놨던 것 같은데 🤔\n괜히 기분이 찜찜하네",
         prompt="인스타에 OOTD 스토리 올릴 건데, 테마는 뭘로 할까?",
         extra_banner="계속 어디에서 숨소리가 들리는 것 같아...",
         extra_choices=[
@@ -505,7 +505,7 @@ def render_choose(stage: Stage):
         banner = stage.extra_banner or "…"
         st.markdown(
             f"<div class='card'><div class='banner'>{escape_html(banner)}</div>"
-            f"<div class='muted' style='margin-top:8px;'>※ 불길한 선택 1개 + 옷 선택 1개를 모두 골라야 넘어갈 수 있어.</div></div>",
+            # f"<div class='muted' style='margin-top:8px;'>※ 불길한 선택 1개 + 옷 선택 1개를 모두 골라야 넘어갈 수 있어.</div></div>",
             unsafe_allow_html=True,
         )
         st.markdown("")
