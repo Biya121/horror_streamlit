@@ -504,10 +504,11 @@ def render_choose(stage: Stage):
     if stage.extra_choices:
         banner = stage.extra_banner or "…"
         st.markdown(
-            f"<div class='card'><div class='banner'>{escape_html(banner)}</div>"
-            # f"<div class='muted' style='margin-top:8px;'>※ 불길한 선택 1개 + 옷 선택 1개를 모두 골라야 넘어갈 수 있어.</div></div>",
-            unsafe_allow_html=True,
-        )
+    f"<div class='card'>"
+    f"<div class='banner'>{escape_html(banner)}</div>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
         st.markdown("")
 
         cols = st.columns(len(stage.extra_choices))
