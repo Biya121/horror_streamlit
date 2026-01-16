@@ -1,15 +1,13 @@
 # app.py
 # "루시의 달콤살벌 데이트!" - Streamlit Horror Text Adventure
-# Fixes applied:
-# 1) After selecting a button, previous scripts (note/prompt/choices) do NOT remain on screen.
-#    - We render ONLY the current scene.
-#    - After any selection, we switch scene and rerun immediately.
-# 2) Replace ".... 선택지가 하나 더 생겼다." -> "점점 무서워지고 있어"
-# 3) Add space for a title image between title and buttons on the first screen.
-#    - If title.png exists (./title.png or ./assets/title.png), it will display automatically.
+#
+# Changes in this version:
+# 1) Stage-specific ominous banner text (not统一).
+# 2) If extra (ominous) choices + outfit choices appear together, user must choose BOTH before proceeding.
+#    - We store both selections, then show ONE combined outcome screen.
+# 3) When atmosphere is dark, button font color becomes RED for readability.
 
 import os
-import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Any
 
@@ -27,7 +25,7 @@ def init_state():
     if "stage" not in ss:
         ss.stage = 1
     if "darkness" not in ss:
-        ss.darkness = 0  # 0..8 (higher = darker)
+        ss.darkness = 0  # 0..8
     if "flags" not in ss:
         ss.flags = {
             "checked_door": False,
@@ -35,8 +33,15 @@ def init_state():
             "stayed_home": False,
             "ignored_warnings": 0,
         }
+
+    # For combined selection flow (extra + outfit)
+    if "picked_extra" not in ss:
+        ss.picked_extra = None  # Option or None
+    if "picked_outfit" not in ss:
+        ss.picked_outfit = None  # Option or None
+
     if "last_outcome" not in ss:
-        ss.last_outcome = ""          # outcome text to show on outcome scene
+        ss.last_outcome = ""  # string shown on outcome scene only
     if "gameover_reason" not in ss:
         ss.gameover_reason = ""
     if "ending_key" not in ss:
@@ -54,6 +59,8 @@ def reset_game():
         "stayed_home": False,
         "ignored_warnings": 0,
     }
+    ss.picked_extra = None
+    ss.picked_outfit = None
     ss.last_outcome = ""
     ss.gameover_reason = ""
     ss.ending_key = ""
@@ -70,7 +77,7 @@ def escape_html(s: str) -> str:
 
 
 # ----------------------------
-# Theme (pink -> dark)
+# Theme
 # ----------------------------
 
 def apply_theme(darkness: int):
@@ -85,6 +92,10 @@ def apply_theme(darkness: int):
     card_bg = ["#fff0f8", "#ffe7f4", "#ffe0f0", "#f7d6ea", "#2a2026", "#20171d", "#161017", "#0e0a10", "#0b080d"][d]
     note_bg = ["#ffd9ec", "#ffd0e8", "#ffc4e2", "#ffb9dc", "#3a2a33", "#2a2026", "#20171d", "#161017", "#100b12"][d]
     note_text = ["#2b1b24", "#2b1b24", "#2b1b24", "#2b1b24", "#f2e9ef", "#f2e9ef", "#f2e9ef", "#f2e9ef", "#f2e9ef"][d]
+
+    # (3) Button text color rule:
+    # When dark enough, use RED text for readability.
+    button_text = "#2b1b24" if d < 5 else "#ff2a2a"
 
     st.markdown(
         f"""
@@ -150,21 +161,28 @@ def apply_theme(darkness: int):
           white-space: pre-wrap;
         }}
 
+        .banner {{
+          font-weight: 900;
+          letter-spacing: -0.2px;
+          white-space: pre-wrap;
+        }}
+
         .outcome {{
           font-size: 18px;
           line-height: 1.7;
           white-space: pre-wrap;
         }}
 
+        /* buttons */
         div.stButton > button {{
           width: 100%;
           border-radius: 14px;
           padding: 12px 12px;
-          font-weight: 800;
+          font-weight: 900;
           border: 1px solid rgba(255,255,255,0.18);
+          color: {button_text} !important;     /* force */
         }}
 
-        /* Make the page feel minimal */
         header, footer {{ visibility: hidden; }}
         </style>
         """,
@@ -196,6 +214,7 @@ class Stage:
     options: List[Option] = field(default_factory=list)
     extra_note_flash: Optional[str] = None
     extra_choices: Optional[List[Option]] = None
+    extra_banner: Optional[str] = None  # stage-specific ominous banner
 
 
 def stage_asset_path(stage: int, option_idx: int) -> str:
@@ -207,9 +226,9 @@ def make_stages() -> Dict[int, Stage]:
     def flag_looked_window(flags): flags["looked_window"] = True
     def flag_stayed_home(flags): flags["stayed_home"] = True
 
-    stages: Dict[int, Stage] = {}
+    s: Dict[int, Stage] = {}
 
-    stages[1] = Stage(
+    s[1] = Stage(
         1,
         note_text="안녕! 오늘은 정말 중요한 날이야 💕\n데이트 준비를 도와줄래?\n먼저 옷부터 골라보자!",
         prompt="오늘은 테니스를 치러 갈 거니까 🎾\n스포티하면서도 귀여운 룩으로 부탁해!",
@@ -221,11 +240,12 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[2] = Stage(
+    s[2] = Stage(
         2,
         note_text="생각해보니까…\n약속 시간보다 조금 일찍 준비해도 괜찮겠지? 😊\n오늘은 왠지 기분이 좋아.",
         prompt="가벼운 아우터를 입을까 말까 고민 중이야!",
         extra_note_flash="현관 쪽에서… 소리가 난 것 같았어.",
+        extra_banner="방금… 들었어?\n귀여운 소리였는데, 왜 싫지.",
         extra_choices=[
             Option("door_peek", "문을 확인한다", "잠깐… 문고리가 차갑네. 그래도 닫혀 있어.", darkness_delta=1, set_flag=flag_checked_door),
             Option("ignore", "무시한다", "착각이겠지. 귀찮아…", darkness_delta=1, add_ignore=1),
@@ -238,10 +258,11 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[3] = Stage(
+    s[3] = Stage(
         3,
         note_text="방금 말한 소리 말이야…\n아마 착각이겠지? 😅\n그래도 옷은 제대로 골라야지!",
         prompt="치마가 좋을까? 반바지가 좋을까?",
+        extra_banner="문이… 아까랑 똑같이 보이니?\n난 아닌 것 같아.",
         extra_choices=[
             Option("door_check", "문을 다시 잠근다", "잠금 소리가 크게 울렸어. 너무 크게…", darkness_delta=1, set_flag=flag_checked_door),
             Option("ignore", "무시한다", "응. 아무 일도 없을 거야.", darkness_delta=1, add_ignore=1),
@@ -254,10 +275,11 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[4] = Stage(
+    s[4] = Stage(
         4,
         note_text="아까 문 말이야…\n분명 닫아놨던 것 같은데 🤔\n뭐, 상관없겠지?",
         prompt="오늘 기분에 맞는 색을 골라줘.",
+        extra_banner="너는 ‘상관없다’는 말을\n몇 번까지 할 수 있어?",
         extra_choices=[
             Option("listen", "문 쪽에 귀를 댄다", "…무슨 소리도 안 나. 너무 조용해.", darkness_delta=2),
             Option("ignore", "무시한다", "응. 귀찮아…", darkness_delta=1, add_ignore=1),
@@ -270,10 +292,11 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[5] = Stage(
+    s[5] = Stage(
         5,
         note_text="창문 쪽이 조금… 이상해.\n커튼을 닫아둘까?",
         prompt="액세서리를 고를까? (가벼운 것만!)",
+        extra_banner="창문은 거울이야.\n밖이 아니라, ‘안’을 보여줘.",
         extra_choices=[
             Option("window", "창문을 본다", "유리 너머로… 뭔가가 지나간 것 같아.", darkness_delta=2, set_flag=flag_looked_window),
             Option("curtain", "커튼을 닫는다", "커튼이 닫히는 소리가, 너무 크게 들려.", darkness_delta=1),
@@ -287,10 +310,11 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[6] = Stage(
+    s[6] = Stage(
         6,
         note_text="…\n그냥 집에 있으면 안 될까?\n네가 정해줘.",
         prompt="나갈까? 말까?",
+        extra_banner="밖은 밝아.\n그래서 더 잘 보여.",
         extra_choices=[
             Option("go_out", "그래도 나간다", "응… 약속은 약속이니까.", darkness_delta=2),
             Option("stay", "집에 남아 있는다", "문을 다시 잠그자. 숨을 크게 쉬자.", darkness_delta=2, set_flag=flag_stayed_home),
@@ -303,10 +327,11 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[7] = Stage(
+    s[7] = Stage(
         7,
         note_text="방 안에\n다른 숨소리가 있어.",
         prompt="이제 선택은… 옷이 아니야.",
+        extra_banner="너의 숨은 규칙이었어.\n이제는 ‘신호’야.",
         extra_choices=[
             Option("open", "문을 연다", "문이 열리는 순간, 공기가 바뀐다.", game_over=True, game_over_reason="문 밖에서 누군가 웃고 있었어.", darkness_delta=3),
             Option("lights", "불을 끈다", "깜깜해지자… 더 가까워진다.", game_over=True, game_over_reason="어둠 속에서 네 이름을 불렀어.", darkness_delta=3),
@@ -321,10 +346,11 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    stages[8] = Stage(
+    s[8] = Stage(
         8,
         note_text="마지막이야.\n끝을 고르자.",
         prompt="루시는… 어디로 가야 할까?",
+        extra_banner="엔딩은 ‘선택’이 아니라\n‘기록’이야.",
         extra_choices=[
             Option("end_a", "커튼 뒤에 숨는다", "조용히… 숨을 참는다.", darkness_delta=0),
             Option("end_b", "그대로 나간다", "밖은 조용했다. 너무 조용했다.", darkness_delta=0),
@@ -338,38 +364,23 @@ def make_stages() -> Dict[int, Stage]:
         ],
     )
 
-    return stages
+    return s
 
 
 STAGES = make_stages()
 
 
 # ----------------------------
-# Logic
+# Apply option effects (without auto-scene jump)
 # ----------------------------
 
-def apply_option(opt: Option):
+def apply_effects(opt: Option):
     ss = st.session_state
-
-    # flags
     if opt.set_flag is not None:
         opt.set_flag(ss.flags)
-
     if opt.add_ignore:
         ss.flags["ignored_warnings"] += opt.add_ignore
-
     ss.darkness = min(8, ss.darkness + opt.darkness_delta)
-
-    # Store outcome text for "outcome scene only"
-    ss.last_outcome = opt.outcome
-
-    if opt.game_over:
-        ss.gameover_reason = opt.game_over_reason or "…"
-        ss.scene = "gameover"
-        st.rerun()
-
-    ss.scene = "outcome"
-    st.rerun()
 
 
 def compute_ending() -> str:
@@ -384,8 +395,48 @@ def compute_ending() -> str:
     return "B"
 
 
+def clear_stage_picks():
+    st.session_state.picked_extra = None
+    st.session_state.picked_outfit = None
+
+
+def maybe_proceed_to_outcome(stage: Stage):
+    """
+    Rule:
+    - If stage has extra_choices: user MUST pick one extra AND one outfit before moving on.
+    - If stage has no extra_choices: only outfit pick is required.
+    Once required picks are done, we build a combined outcome message and move to outcome scene.
+    """
+    ss = st.session_state
+    need_extra = stage.extra_choices is not None and len(stage.extra_choices) > 0
+
+    if need_extra and (ss.picked_extra is None or ss.picked_outfit is None):
+        return
+    if (not need_extra) and (ss.picked_outfit is None):
+        return
+
+    # Build combined outcome (order: extra -> outfit)
+    lines = []
+    if ss.picked_extra is not None:
+        lines.append(ss.picked_extra.outcome)
+    if ss.picked_outfit is not None:
+        lines.append(ss.picked_outfit.outcome)
+
+    ss.last_outcome = "\n\n".join([l for l in lines if l.strip()]) or "…"
+
+    # If either pick caused game over, go to gameover immediately
+    for opt in [ss.picked_extra, ss.picked_outfit]:
+        if opt is not None and opt.game_over:
+            ss.gameover_reason = opt.game_over_reason or "…"
+            ss.scene = "gameover"
+            st.rerun()
+
+    ss.scene = "outcome"
+    st.rerun()
+
+
 # ----------------------------
-# Renderers (IMPORTANT: render ONLY current scene)
+# Renderers
 # ----------------------------
 
 def render_title():
@@ -399,26 +450,26 @@ def render_title():
         unsafe_allow_html=True,
     )
 
-    # (3) Space for title image between title and buttons
+    # Title image space
     title_img_candidates = ["title.png", os.path.join("assets", "title.png")]
     img_path = next((p for p in title_img_candidates if os.path.exists(p)), None)
 
-    # Always reserve space; show image if exists, else show a minimal placeholder card
     if img_path:
         st.image(img_path, use_container_width=True)
     else:
         st.markdown(
-            "<div class='card'><div class='muted'>타이틀 이미지 자리 (파일을 넣으면 자동 표시돼요)\n- title.png 또는 assets/title.png</div></div>",
+            "<div class='card'><div class='muted'>타이틀 이미지 자리\n- title.png 또는 assets/title.png</div></div>",
             unsafe_allow_html=True,
         )
 
-    st.markdown("")  # spacing
+    st.markdown("")
 
     c1, c2 = st.columns(2)
     with c1:
         if st.button("💗 데이트 준비 시작하기", key="start_btn"):
             st.session_state.scene = "note"
             st.session_state.stage = 1
+            clear_stage_picks()
             st.rerun()
     with c2:
         if st.button("❌ 종료하고 나가기", key="exit_btn"):
@@ -438,29 +489,46 @@ def render_note(stage: Stage):
 
     if st.button("다음으로", key=f"to_choose_{stage.stage_num}"):
         st.session_state.scene = "choose"
+        clear_stage_picks()
         st.rerun()
 
 
 def render_choose(stage: Stage):
-    # Extra choices banner
+    ss = st.session_state
+
+    # Extra choice block (ominous)
     if stage.extra_choices:
-        # (2) Replace text
-        st.markdown("<div class='card'><div class='muted'>점점 무서워지고 있어</div></div>", unsafe_allow_html=True)
+        banner = stage.extra_banner or "…"
+        st.markdown(
+            f"<div class='card'><div class='banner'>{escape_html(banner)}</div>"
+            f"<div class='muted' style='margin-top:8px;'>※ 불길한 선택 1개 + 옷 선택 1개를 모두 골라야 넘어갈 수 있어.</div></div>",
+            unsafe_allow_html=True,
+        )
         st.markdown("")
 
         cols = st.columns(len(stage.extra_choices))
         for i, opt in enumerate(stage.extra_choices):
             with cols[i]:
-                if st.button(opt.label, key=f"extra_{stage.stage_num}_{opt.key}"):
-                    apply_option(opt)
+                label = opt.label
+                picked = (ss.picked_extra is not None and ss.picked_extra.key == opt.key)
+                if st.button(("✅ " if picked else "") + label, key=f"extra_{stage.stage_num}_{opt.key}"):
+                    ss.picked_extra = opt
+                    apply_effects(opt)
+                    maybe_proceed_to_outcome(stage)
 
         st.markdown("")
 
     # Outfit prompt
-    st.markdown(f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='card'><div class='muted'>{escape_html(stage.prompt)}</div>"
+        f"<div class='muted' style='margin-top:6px;'>"
+        f"{'✅ 옷 선택 완료' if ss.picked_outfit else '옷을 1개 골라줘.'}"
+        f"</div></div>",
+        unsafe_allow_html=True,
+    )
     st.markdown("")
 
-    # Outfit options 1..4 (with optional images)
+    # Outfit options 1..4
     cols = st.columns(2)
     slot_cols = [cols[0], cols[1], cols[0], cols[1]]
 
@@ -476,13 +544,15 @@ def render_choose(stage: Stage):
                     unsafe_allow_html=True,
                 )
 
-            # (1) As soon as clicked, we switch scenes and rerun -> previous scripts vanish
-            if st.button(opt.label, key=f"opt_{stage.stage_num}_{opt.key}"):
-                apply_option(opt)
+            picked = (ss.picked_outfit is not None and ss.picked_outfit.key == opt.key)
+            if st.button(("✅ " if picked else "") + opt.label, key=f"opt_{stage.stage_num}_{opt.key}"):
+                ss.picked_outfit = opt
+                apply_effects(opt)
+                maybe_proceed_to_outcome(stage)
 
 
 def render_outcome():
-    # outcome scene shows ONLY the outcome text (no previous note/prompt/choices)
+    # Show ONLY combined outcome
     text = st.session_state.last_outcome or "…"
     st.markdown(
         f"<div class='card'><div class='outcome'>{escape_html(text)}</div></div>",
@@ -496,11 +566,13 @@ def render_outcome():
             st.session_state.stage += 1
             st.session_state.scene = "note"
             st.session_state.last_outcome = ""
+            clear_stage_picks()
             st.rerun()
     else:
         st.session_state.ending_key = compute_ending()
         st.session_state.scene = "ending"
         st.session_state.last_outcome = ""
+        clear_stage_picks()
         st.rerun()
 
 
@@ -514,7 +586,7 @@ def render_gameover():
 
     reason = st.session_state.gameover_reason or "끝."
     st.markdown(
-        f"<div class='card'><div style='font-weight:900; font-size:22px;'>GAME OVER</div>"
+        f"<div class='card'><div style='font-weight:950; font-size:24px;'>GAME OVER</div>"
         f"<div class='muted'>{escape_html(reason)}</div></div>",
         unsafe_allow_html=True,
     )
@@ -538,6 +610,7 @@ def render_gameover():
             st.session_state.last_outcome = ""
             st.session_state.gameover_reason = ""
             st.session_state.ending_key = ""
+            clear_stage_picks()
             st.rerun()
 
 
@@ -593,3 +666,4 @@ elif scene == "ending":
 else:
     reset_game()
     st.rerun()
+
