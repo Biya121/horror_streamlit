@@ -415,14 +415,18 @@ def maybe_proceed_to_outcome(stage: Stage):
     if (not need_extra) and (ss.picked_outfit is None):
         return
 
-    # Build combined outcome (order: extra -> outfit)
-    lines = []
-    if ss.picked_extra is not None:
-        lines.append(ss.picked_extra.outcome)
-    if ss.picked_outfit is not None:
-        lines.append(ss.picked_outfit.outcome)
+    # Outcome rule:
+    # - If stage has extra choices (ominous + outfit together),
+    #   show ONLY the ominous outcome in the outcome scene.
+    # - Otherwise (no extra choices), show the outfit outcome.
+    need_extra = stage.extra_choices is not None and len(stage.extra_choices) > 0
 
-    ss.last_outcome = "\n\n".join([l for l in lines if l.strip()]) or "…"
+    if need_extra and ss.picked_extra is not None:
+        ss.last_outcome = ss.picked_extra.outcome or "…"
+    elif ss.picked_outfit is not None:
+        ss.last_outcome = ss.picked_outfit.outcome or "…"
+    else:
+        ss.last_outcome = "…"
 
     # If either pick caused game over, go to gameover immediately
     for opt in [ss.picked_extra, ss.picked_outfit]:
