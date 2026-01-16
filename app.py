@@ -1,4 +1,4 @@
-ㄹ# app.py
+# app.py
 # "루시의 달콤살벌 데이트!" - Streamlit Horror Text Adventure
 #
 # Changes in this version:
