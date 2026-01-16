@@ -25,7 +25,6 @@ def reset_game():
     st.session_state.stage = "intro"
     st.session_state.room = None
     st.session_state.screamed = False
-    # 텍스트 연출 재생 여부 플래그들 초기화
     st.session_state.played = {}
 
 
@@ -41,23 +40,32 @@ def ensure_state():
 
 
 def play_once(key: str) -> bool:
-    """해당 stage에서 텍스트 시퀀스를 한 번만 재생하기 위한 플래그"""
     if st.session_state.played.get(key, False):
         return False
     st.session_state.played[key] = True
     return True
 
 
-def fade_sequence(lines, hold=1.7, fade=1.4, gap=0.25):
+def typewriter(text: str, speed: float = 0.04):
+    """타이핑 효과"""
+    box = st.empty()
+    out = ""
+    for ch in text:
+        out += ch
+        box.markdown(f"<div class='typing'>{out}</div>", unsafe_allow_html=True)
+        time.sleep(speed)
+    return box
+
+
+def fade_sequence(lines, hold=0.65, fade=0.55, gap=0.08):
     """
-    lines: 출력할 문자열 리스트
-    각 줄이 나타났다 -> 서서히 사라짐 -> 완전히 사라진 뒤 다음 줄 표시
+    더 빠른 페이드 + 잔상 최소화:
+    - 문장 표시(hold) -> 빠른 fade -> box.empty()로 완전 제거 -> 다음 문장
     """
     box = st.empty()
     total = hold + fade
 
     for line in lines:
-        # CSS 애니메이션(duration = total)로 자동 fade out
         html = f"""
         <div class="fade-line" style="animation-duration:{total}s;">
             {line.replace("\n","<br>")}
@@ -66,6 +74,7 @@ def fade_sequence(lines, hold=1.7, fade=1.4, gap=0.25):
         box.markdown(html, unsafe_allow_html=True)
         time.sleep(total + gap)
         box.empty()
+        time.sleep(0.02)  # 완전 제거 체감용 짧은 텀
 
 
 # =========================
@@ -74,6 +83,11 @@ def fade_sequence(lines, hold=1.7, fade=1.4, gap=0.25):
 st.markdown(
     """
 <style>
+/* --- 상단 검은 막대/데코 제거 --- */
+header[data-testid="stHeader"] { display: none; }
+div[data-testid="stDecoration"] { display: none; }
+
+/* 전체 배경 */
 .stApp {
   background: radial-gradient(circle at 20% 20%, #141414 0%, #060606 55%, #000 100%);
   color: #e6e6e6;
@@ -105,11 +119,19 @@ h1, h2, h3 { letter-spacing: 0.5px; }
   background: rgba(255,255,255,0.10);
 }
 
-/* 페이드 텍스트 */
-@keyframes fadeOutSlow {
+/* 타이핑 텍스트 */
+.typing{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 1.07rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+/* 페이드 텍스트: 더 빠르고 끝에서 완전 투명 */
+@keyframes fadeOutFast {
   0%   { opacity: 0; transform: translateY(2px); }
-  8%   { opacity: 1; transform: translateY(0); }
-  70%  { opacity: 1; }
+  10%  { opacity: 1; transform: translateY(0); }
+  78%  { opacity: 1; }
   100% { opacity: 0; }
 }
 .fade-line{
@@ -117,8 +139,9 @@ h1, h2, h3 { letter-spacing: 0.5px; }
   font-size: 1.07rem;
   line-height: 1.65;
   white-space: pre-wrap;
-  animation-name: fadeOutSlow;
+  animation-name: fadeOutFast;
   animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
 }
 
 /* GAME OVER 빨간 깜빡임 */
@@ -169,15 +192,21 @@ with st.sidebar:
     sound_on = st.toggle("🔊 사운드 켜기", value=True)
     fast_mode = st.toggle("⚡ 빠른 연출", value=False)
 
-# 페이드 속도(빠른 모드면 조금 더 빠르게)
-HOLD = 1.2 if fast_mode else 1.7
-FADE = 1.0 if fast_mode else 1.4
-GAP = 0.15 if fast_mode else 0.25
+# ---- 페이드 속도(이전보다 빠르게) ----
+# fast_mode면 더 빠르게
+HOLD = 0.45 if fast_mode else 0.65
+FADE = 0.38 if fast_mode else 0.55
+GAP = 0.05 if fast_mode else 0.08
+
+# ---- 타자 속도(1.2배 빠르게) ----
+# (이 값이 작을수록 더 빠름)
+BASE_TYPING = 0.028 if fast_mode else 0.040
+TYPING_SPEED = BASE_TYPING / 1.2  # ✅ 지금보다 약 1.2배 빠름
 
 st.title("🕯️ 금지된 방")
 
 # =========================
-# 스테이지: INTRO
+# INTRO
 # =========================
 if st.session_state.stage == "intro":
     st.markdown("<div class='block'>", unsafe_allow_html=True)
@@ -196,14 +225,13 @@ if st.session_state.stage == "intro":
             st.stop()
 
 # =========================
-# 스테이지: WARNING (페이드 시퀀스)
+# WARNING (페이드)
 # =========================
 elif st.session_state.stage == "warning":
     st.markdown("<div class='block'>", unsafe_allow_html=True)
-    st.markdown(" ")  # 여백용
+    st.markdown(" ")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # 사운드(선택)
     if sound_on and WHISPER_AUDIO.exists():
         st.audio(str(WHISPER_AUDIO), autoplay=True)
 
@@ -222,7 +250,7 @@ elif st.session_state.stage == "warning":
         st.rerun()
 
 # =========================
-# 스테이지: 방 선택 (옵션만)
+# 방 선택 (옵션만)
 # =========================
 elif st.session_state.stage == "choose_room":
     rooms = [
@@ -233,7 +261,6 @@ elif st.session_state.stage == "choose_room":
 
     st.markdown("<div class='block'>", unsafe_allow_html=True)
     st.markdown("세 개의 문이 있다.")
-    st.markdown("어느 쪽이든… 돌아올 수 있다는 보장은 없다.")
     st.markdown("</div>", unsafe_allow_html=True)
 
     choice = st.radio("문을 선택해.", rooms, index=0)
@@ -250,7 +277,7 @@ elif st.session_state.stage == "choose_room":
             st.rerun()
 
 # =========================
-# 스테이지: STORY (방별 긴장감 대본 + 페이드 시퀀스)
+# STORY (방별 페이드 시퀀스)
 # =========================
 elif st.session_state.stage == "story":
     room = st.session_state.room or "문"
@@ -259,7 +286,7 @@ elif st.session_state.stage == "story":
         "1번 문 — 거울의 방": [
             "거울이 네 모습을 담는다.",
             "처음엔 정상이다.",
-            "…하지만 다음 순간, 거울 속 네가 조금 늦게 따라 한다.",
+            "…하지만 다음 순간, 거울 속 네가 아주 조금 늦게 따라 한다.",
             "눈을 깜빡였는데 거울 속은 아직 뜨고 있다.",
             "거울 속 네가 입술을 움직인다.",
             "소리는 없는데, 의미는 분명하다.",
@@ -297,16 +324,16 @@ elif st.session_state.stage == "story":
         st.rerun()
 
 # =========================
-# 스테이지: EVENT (랜덤 긴장 이벤트 + 페이드 시퀀스)
+# EVENT (페이드 + 선택)
 # =========================
 elif st.session_state.stage == "event":
     room = st.session_state.room or ""
-    # 방별로 더 맞는 이벤트가 섞이도록 가중치 느낌으로 리스트 구성
+
     base_events = [
         "발밑에서 아주 미세하게 진동이 느껴진다.",
         "전등이 꺼졌다 켜진다. 꺼진 동안… 누가 바로 앞에 있었던 것 같다.",
         "숨을 들이마시는 순간, 누가 동시에 들이마신다.",
-        "방의 공기가 갑자기 차가워진다. 손가락 끝부터 감각이 흐려진다.",
+        "방의 공기가 갑자기 차가워진다. 손끝부터 감각이 흐려진다.",
         "너의 이름을 부르는 소리가 들린다. 가까운 곳에서… 아주 가까운 곳에서.",
     ]
     mirror_events = [
@@ -351,11 +378,11 @@ elif st.session_state.stage == "event":
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("문을 당긴다"):
-            st.session_state.stage = "jumpscare"
+            st.session_state.stage = "type_then_jumpscare"
             st.rerun()
     with col2:
         if st.button("숨을 죽인다"):
-            st.session_state.stage = "jumpscare"
+            st.session_state.stage = "type_then_jumpscare"
             st.rerun()
     with col3:
         if st.button("탈출"):
@@ -363,14 +390,28 @@ elif st.session_state.stage == "event":
             st.rerun()
 
 # =========================
-# 스테이지: JUMPSCARE (이미지 + 빨간 깜빡임 + 버튼 누르면 처음으로)
+# (추가) 점프스케어 직전 타이핑(1.2배 빠름 적용)
+# =========================
+elif st.session_state.stage == "type_then_jumpscare":
+    # 짧은 타이핑 연출 후 점프스케어로 이동
+    if play_once("pre_jump_typing"):
+        st.markdown("<div class='block'>", unsafe_allow_html=True)
+        typewriter("…뒤에서.\n아무 소리도 안 나는데.\n너는 이미 느꼈다.", speed=TYPING_SPEED)
+        st.markdown("</div>", unsafe_allow_html=True)
+        time.sleep(0.25)
+
+    if st.button("…"):
+        st.session_state.stage = "jumpscare"
+        st.rerun()
+
+# =========================
+# JUMPSCARE + GAME OVER(깜빡임) + 처음으로
 # =========================
 elif st.session_state.stage == "jumpscare":
     st.markdown("<div class='block'>", unsafe_allow_html=True)
 
-    # 점프스케어는 1회만 표시
     if not st.session_state.screamed:
-        time.sleep(0.2)
+        time.sleep(0.18)
         if JUMPSCARE_IMG.exists():
             st.image(str(JUMPSCARE_IMG), use_container_width=True)
         else:
@@ -380,7 +421,6 @@ elif st.session_state.stage == "jumpscare":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # GAME OVER 느낌(빨간 깜빡임)
     st.markdown(
         """
         <div class="gameover">
@@ -403,7 +443,7 @@ elif st.session_state.stage == "jumpscare":
             st.rerun()
 
 # =========================
-# 스테이지: ESCAPE
+# ESCAPE
 # =========================
 elif st.session_state.stage == "escape":
     st.markdown("<div class='block'>", unsafe_allow_html=True)
