@@ -77,7 +77,15 @@ div.stButton > button:hover {
     box-shadow: 0 0 20px var(--gold-primary);
 }
 
-/* 6. 메트릭 및 장식 요소 */
+/* 6. 입력창 스타일 커스텀 (검색창) */
+div[data-testid="stTextInput"] input {
+    background-color: #121214 !important;
+    color: var(--gold-bright) !important;
+    border: 1px solid var(--gold-darker) !important;
+    font-family: 'Cinzel', serif;
+}
+
+/* 7. 메트릭 및 장식 요소 */
 [data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
 [data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
 
@@ -224,18 +232,36 @@ if st.session_state.page == "Home":
             go("Browse")
 
 elif st.session_state.page == "Browse":
-    # 1. 사이드바 영역 (네비게이션 고정)
+    # 1. 사이드바 영역 (네비게이션 고정 + 검색)
     with st.sidebar:
         st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
+        
+        # 카테고리 버튼들 출력
         for cat in CATEGORIES:
             if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
                 st.session_state.selected_cat = cat.title_en
         
         st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+        
+        # 메인 메뉴 이동 버튼
         if st.button("← Main Menu", key="back_home", use_container_width=True):
             go("Home")
+            
+        # --- 카테고리 검색 기능 추가 ---
+        st.markdown('<p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 2rem;">Search Categories</p>', unsafe_allow_html=True)
+        search_query = st.text_input("", placeholder="Type to filter...", label_visibility="collapsed")
+        
+        if search_query:
+            filtered_cats = [c for c in CATEGORIES if search_query.lower() in c.title_en.lower()]
+            if filtered_cats:
+                st.markdown('<p style="color: var(--gold-primary); font-size: 0.7rem;">Results:</p>', unsafe_allow_html=True)
+                for f_cat in filtered_cats:
+                    if st.button(f"🔍 {f_cat.title_en}", key=f"search_{f_cat.title_en}", use_container_width=True):
+                        st.session_state.selected_cat = f_cat.title_en
+            else:
+                st.caption("No categories found.")
 
-    # 2. 메인 콘텐츠 영역 (사이드바 덕분에 상단 여백 제거됨)
+    # 2. 메인 콘텐츠 영역
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
 
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
