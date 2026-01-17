@@ -133,7 +133,7 @@ CATEGORIES = [
             StatItem("Defeats", "1,223,305", "실패로 끝난 명예 모드 횟수입니다."),
             StatItem("Honourable Choice", "76%", "실패 후 76%는 명예롭게 세이브를 지웠고, 24%는 모험을 이어갔습니다.")
         ],
-        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Honour+Mode+Banner"
+        "https://pbs.twimg.com/media/GUYn_GlXkAA-rs6?format=jpg&name=medium"
     ),
     Category(
         "Origin & Avatars",
@@ -144,7 +144,7 @@ CATEGORIES = [
             StatItem("Gale", "1.20 M", "마법사 게일이 아주 근소한 차이로 뒤를 잇습니다."),
             StatItem("Shadowheart", "0.86 M", "섀도하트가 오리진 선택지 중 3위를 차지했습니다.")
         ],
-        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Origin+Characters"
+        "https://pbs.twimg.com/media/GUYoM75WsAAFgNc?format=jpg&name=medium"
     ),
     Category(
         "Romance & Intimacy",
@@ -155,7 +155,7 @@ CATEGORIES = [
             StatItem("The Emperor", "1.1 million", "110만 명의 모험가가 마인드 플레이어와 사랑을 나누었습니다."),
             StatItem("Halsin Split", "70% / 30%", "할신과의 관계 중 30%는 곰의 형상으로 이루어졌습니다.")
         ],
-        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Romance+Statistics"
+        "https://pbs.twimg.com/media/GUYoazpXQAAS2QF?format=jpg&name=medium"
     ),
     Category(
         "Pets & Epilogues",
@@ -173,10 +173,11 @@ CATEGORIES = [
         "운명을 바꾼 모험가들. 리스펙(Respec)의 모든 것입니다.",
         [
             StatItem("Shadowheart", "4.89M times", "가장 많이 직업이 바뀐 동료 1위입니다."),
-            StatItem("Wyll", "1.41M times", "와일은 주로 헥스블레이드로 새로운 길을 찾았습니다."),
+            StatItem("Wyll", "1.41M times", "윌은 주로 헥스블레이드로 새로운 길을 찾았습니다."),
             StatItem("Minsc", "350 people", "민스크를 '죽음 권역' 클레릭으로 바꾼 독특한 취향의 모험가들입니다."),
             StatItem("Multiclass", "2.30%", "단 한 번의 플레이로 모든 클래스를 경험한 달인들입니다.")
-        ]
+        ],
+        "https://pbs.twimg.com/media/GxhDmNaXcAADB9_?format=jpg&name=medium"
     )
 ]
 
