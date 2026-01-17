@@ -199,7 +199,7 @@ def go(page_name):
 # --- HOME PAGE ---
 if st.session_state.page == "Home":
     # 1. 대표 배너 사진 (URL 입력 가능)
-    st.image("https://via.placeholder.com/1400x500/0a0a0c/c7aa5c?text=BALDUR'S+GATE+3+DATABASE", use_container_width=True)
+    st.image("https://giffiles.alphacoders.com/219/219996.gif", use_container_width=True)
     
     st.markdown('<div class="bigtitle" style="font-size: 5rem; margin-top: -80px;">ARCHIVE OF FATE</div>', unsafe_allow_html=True)
     st.markdown('<p style="text-align:center; font-family:Cinzel; letter-spacing:5px;">A Repository of Every Decision, Every Roll, Every Death.</p>', unsafe_allow_html=True)
