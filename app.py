@@ -220,7 +220,6 @@ elif st.session_state.page == "Browse":
     col_nav, col_main = st.columns([0.8, 2.2], gap="large")
     
     with col_nav:
-        st.markdown('<div class="bg3-panel" style="padding: 1.5rem;">', unsafe_allow_html=True)
         st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold;">Navigation</p>', unsafe_allow_html=True)
         for cat in CATEGORIES:
             if st.button(cat.title_en, key=cat.title_en, use_container_width=True):
