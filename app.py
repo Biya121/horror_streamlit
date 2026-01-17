@@ -184,7 +184,7 @@ CATEGORIES = [
         "모험의 순간들을 기록한 이미지 저장소입니다.",
         [
             # 아래 형식으로 사진 제목과 이미지 링크를 계속 추가할 수 있습니다.
-            StatItem("", "images/photo1.gif", ""),
+            StatItem("", "assets/photo1.gif", ""),
         ],
     )
 ]
