@@ -129,7 +129,7 @@ class Category:
     img_url: str = "" 
 
 CATEGORIES = [
-    Category("Most Importantly", "커뮤니티에서 화제가 된 특이한 기록들입니다.", [
+    Category("Most Peculiar", "커뮤니티에서 화제가 된 특이한 기록들입니다.", [
         StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신했습니다."),
         StatItem("Friendly Dinosaurs", "3.5 million", "350만 명이 친절한 공룡들을 만났습니다."),
         StatItem("Freed Us", "2 million", "200만 명의 플레이어가 '우리'를 해방했습니다."),
@@ -151,7 +151,7 @@ CATEGORIES = [
         StatItem("Companion Kisses", "75M+", "동료들과 나눈 입맞춤은 7,500만 번을 돌파했습니다."),
         StatItem("Kiss Leader", "Shadowheart", "섀도하트가 독보적 1위를 기록했습니다."),
         StatItem("The Emperor", "1.1 million", "110만 명이 마인드 플레이어와 사랑을 나누었습니다."),
-        StatItem("Halsin Split", "70% / 30%", "할신과의 관계 중 30%는 곰 형상으로 이루어졌습니다.")
+        StatItem("Halsin Split", "70% / 30%", "할신과의 관계 중 30%는 곰 형상으로 이루어졌습니다. 이런 변태들.")
     ], "https://pbs.twimg.com/media/GUYoazpXQAAS2QF?format=jpg&name=medium"),
     Category("Pets & Epilogues", "동물 친구들과의 교감 기록입니다.", [
         StatItem("Scratch", "120 million", "세상에서 가장 많이 사랑받은 강아지입니다."),
@@ -159,7 +159,7 @@ CATEGORIES = [
         StatItem("Halsin Hug", "1.1 million", "에필로그에서 110만 명이 할신을 안아주었습니다."),
         StatItem("Petted Tara", "54,000", "게일의 친구 타라를 쓰다듬은 기록입니다.")
     ], "https://pbs.twimg.com/media/GUYoj1AXkAAitOX?format=jpg&name=medium"),
-    Category("Class Respec Stats", "리스펙(Respec)의 모든 것입니다.", [
+    Category("Class Respec Stats", "리스펙(Respec)한 동료들입니다.", [
         StatItem("Shadowheart", "4.89M times", "가장 많이 직업이 바뀐 동료 1위입니다."),
         StatItem("Wyll", "1.41M times", "윌은 주로 헥스블레이드로 새로운 길을 찾았습니다."),
         StatItem("Minsc", "350 people", "민스크를 클레릭으로 바꾼 독특한 취향들입니다."),
