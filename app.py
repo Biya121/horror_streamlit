@@ -23,6 +23,7 @@ CSS = """
 
 :root {
     --bg-dark: #070708;
+    --panel-dark: rgba(18, 18, 20, 0.95);
     --gold-primary: #c7aa5c;
     --gold-bright: #e7d6a2;
     --gold-darker: #5e4d26;
@@ -98,7 +99,7 @@ div[data-testid="stTextInput"] input {
 .sword-particle {
     position: fixed;
     top: -50px;
-    font-size: 2rem;
+    font-size: 2.5rem;
     z-index: 9999;
     pointer-events: none;
     animation: sword-fall 3s linear forwards;
@@ -124,14 +125,14 @@ class Category:
     img_url: str = "" 
 
 CATEGORIES = [
-    Category("Most Importantly", "커뮤니티에서 화제가 된 특이한 기록들입니다.", [
-        StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신했습니다."),
+    Category("Most Importantly", "커뮤니티에서 가장 화제가 된 특이하고 재미있는 기록들입니다.", [
+        StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신하는 굴욕을 겪었습니다."),
         StatItem("Friendly Dinosaurs", "3.5 million", "350만 명이 친절한 공룡들을 만났습니다."),
-        StatItem("Freed Us", "2 million", "200만 명의 플레이어가 '우리'를 해방했습니다."),
+        StatItem("Freed Us", "2 million", "200만 명의 플레이어가 지능 포식자 '우리'를 해방했습니다."),
         StatItem("Spared Alfira", "377,000+", "다크 어지의 숙명을 거스르고 알피라를 살려냈습니다.")
     ], "https://pbs.twimg.com/media/GUYneuVXkAAhKSS?format=jpg&name=medium"),
-    Category("Honour Mode", "영광스러운 정복자들의 기록입니다.", [
-        StatItem("Conquered", "141,660", "황금 주사위를 쟁취하며 명예를 증명했습니다."),
+    Category("Honour Mode", "영광스러운 정복자들의 수치입니다.", [
+        StatItem("Conquered", "141,660", "황금 주사위를 쟁취하며 명예를 증명한 수입니다."),
         StatItem("Level 1 Only", "4,647", "레벨 1로 명예를 클리어한 기록입니다."),
         StatItem("Defeats", "1,223,305", "실패로 끝난 명예 모드 횟수입니다."),
         StatItem("Honourable Choice", "76%", "실패 후 76%는 명예롭게 세이브를 지웠습니다.")
@@ -139,7 +140,7 @@ CATEGORIES = [
     Category("Origin & Avatars", "누가 서사의 중심에 섰을까요?", [
         StatItem("Custom Avatar", "93%+", "대부분은 자신만의 영웅을 직접 빚어냈습니다."),
         StatItem("Astarion", "1.21 M", "오리진 캐릭터 중 가장 많은 선택을 받았습니다."),
-        StatItem("Gale", "1.20 M", "마법사 게일이 아주 근소한 차이로 뒤를 잇습니다."),
+        StatItem("Gale", "1.20 M", "마법사 게일이 근소한 차이로 뒤를 잇습니다."),
         StatItem("Shadowheart", "0.86 M", "섀도하트가 오리진 선택지 중 3위입니다.")
     ], "https://pbs.twimg.com/media/GUYoM75WsAAFgNc?format=jpg&name=medium"),
     Category("Romance & Intimacy", "캠프에서의 사랑 기록입니다.", [
@@ -188,19 +189,21 @@ def go(page_name):
 if st.session_state.page == "Home":
     st.image("https://giffiles.alphacoders.com/219/219996.gif", use_container_width=True)
     st.markdown('<div class="bigtitle" style="font-size: 5rem; margin-top: -80px;">ARCHIVE OF FATE</div>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align:center; font-family:Cinzel; letter-spacing:5px;">A Repository of Every Decision, Every Roll, Every Death.</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
-        st.write("발더스 게이트 3의 모험 기록들을 확인하세요.")
-        if st.button("Browse Stats", use_container_width=True):
+        st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다.")
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
             go("Browse")
 
 elif st.session_state.page == "Browse":
     with st.sidebar:
         st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
         
-        # 1. 카테고리 버튼 (원형 유지)
+        # 1. 카테고리 버튼 리스트 (원형 유지)
         for cat in CATEGORIES:
             if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
                 st.session_state.selected_cat = cat.title_en
@@ -210,9 +213,9 @@ elif st.session_state.page == "Browse":
         if st.button("← Main Menu", key="back_home", use_container_width=True):
             go("Home")
             
-        # 2. 검색창 (엔터 시 이동)
+        # 2. 카테고리 검색창 (엔터 시 이동)
         st.markdown('<p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem;">Quick Search</p>', unsafe_allow_html=True)
-        search_query = st.text_input("", placeholder="Enter & Move...", label_visibility="collapsed")
+        search_query = st.text_input("", placeholder="Enter Category Name...", label_visibility="collapsed")
         if search_query:
             match = next((c for c in CATEGORIES if search_query.lower() in c.title_en.lower()), None)
             if match:
@@ -221,16 +224,16 @@ elif st.session_state.page == "Browse":
         # 3. Welcome! 버튼 (칼 집중 투하 효과)
         if st.button("Welcome!", use_container_width=True):
             st.toast("⚔️ Blade Rain Incoming!")
-            # HTML/CSS 파티클 생성
+            # 커스텀 칼 파티클 생성
             import random
             sword_html = ""
-            for i in range(25): # 25개의 칼 투하
+            for i in range(30):
                 left = random.randint(0, 100)
-                delay = random.uniform(0, 2)
+                delay = random.uniform(0, 1.5)
                 sword_html += f'<div class="sword-particle" style="left:{left}%; animation-delay:{delay}s;">⚔️</div>'
             st.markdown(sword_html, unsafe_allow_html=True)
             
-            # 사이드바 깜빡임 추가
+            # 사이드바 깜빡임 시각 효과
             swords_area = st.empty()
             for _ in range(4):
                 swords_area.markdown("<h3 style='text-align:center;'>⚔️ 🗡️ ⚔️</h3>", unsafe_allow_html=True)
@@ -238,7 +241,7 @@ elif st.session_state.page == "Browse":
                 swords_area.empty()
                 time.sleep(0.1)
 
-    # Main Area
+    # 메인 콘텐츠 영역
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
     
@@ -249,17 +252,19 @@ elif st.session_state.page == "Browse":
     st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
-    # 렌더링 로직 (통계 및 갤러리)
+    # 갤러리 및 통계 출력 로직
     if current_cat.title_en == "Gallery":
         for i in range(0, len(current_cat.items), 2):
             g_col1, g_col2 = st.columns(2)
             with g_col1:
                 item = current_cat.items[i]
                 if os.path.exists(item.value): st.image(item.value, use_container_width=True)
+                if item.headline: st.markdown(f"**{item.headline}**")
             if i + 1 < len(current_cat.items):
                 with g_col2:
                     item = current_cat.items[i+1]
                     if os.path.exists(item.value): st.image(item.value, use_container_width=True)
+                    if item.headline: st.markdown(f"**{item.headline}**")
     else:
         for i in range(0, len(current_cat.items), 2):
             m_col1, m_col2 = st.columns(2)
