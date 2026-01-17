@@ -191,8 +191,7 @@ CATEGORIES = [
             StatItem("", "assets/photo5.gif", ""),
             StatItem("", "assets/photo6.gif", ""),
             StatItem("", "assets/photo7.gif", ""),
-            StatItem("", "assets/photo8.gif", ""),
-            StatItem("", "assets/photo9.gif", "")
+            StatItem("", "assets/photo8.gif", "")
         ],
     )
 ]
