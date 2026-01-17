@@ -14,242 +14,257 @@ st.set_page_config(
 )
 
 # ----------------------------
-# Theme / CSS (BG3 Style: Obsidian & Gold)
+# Enhanced CSS (Obsidian & Antique Gold)
 # ----------------------------
 CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Nanum+Myeongjo:wght@400;700&display=swap');
 
 :root {
-    --bg-dark: #0a0a0c;
-    --panel-dark: #121214;
+    --bg-dark: #070708;
+    --panel-dark: rgba(18, 18, 20, 0.95);
     --gold-primary: #c7aa5c;
     --gold-bright: #e7d6a2;
-    --gold-darker: #8a733e;
+    --gold-darker: #5e4d26;
     --text-main: #f2efe6;
     --text-muted: #a8a08d;
     --accent-red: #8b0000;
 }
 
-/* Background & Body */
+/* Base App Style */
 .stApp {
     background-color: var(--bg-dark);
-    background-image: 
-        radial-gradient(circle at 20% 20%, rgba(199, 170, 92, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(139, 0, 0, 0.03) 0%, transparent 40%);
+    background-image: radial-gradient(circle at 50% -20%, #2a2518 0%, #070708 80%);
     color: var(--text-main);
 }
 
-/* Typography */
+/* Header & Typography */
 h1, h2, h3, .bigtitle {
     font-family: 'Cinzel', serif !important;
     color: var(--gold-bright) !important;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    font-weight: 700 !important;
+    text-shadow: 0 0 15px rgba(199, 170, 92, 0.4);
+    text-align: center;
 }
 
-p, span, label, .stMarkdown {
-    font-family: 'Nanum Myeongjo', serif !important;
-}
-
-/* Panel Design */
+/* BG3 Obsidian Panel */
 .bg3-panel {
     background: var(--panel-dark);
     border: 1px solid var(--gold-darker);
-    border-radius: 4px; /* Medieval style usually has sharper corners */
-    padding: 2rem;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
-    margin-bottom: 20px;
+    border-top: 2px solid var(--gold-primary);
+    border-radius: 2px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    margin-bottom: 2rem;
+    position: relative;
 }
 
-/* Gold Divider */
-.gold-hr {
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-    margin: 1.5rem 0;
-}
-
-/* Custom Metric Style */
-[data-testid="stMetricValue"] {
-    font-family: 'Cinzel', serif !important;
-    color: var(--gold-bright) !important;
-}
-[data-testid="stMetricLabel"] {
-    color: var(--text-muted) !important;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-/* 버튼 스타일 - 흰색 방지 및 황금색 테두리 */
+/* Custom Button (BG3 Gold Style) */
 div.stButton > button {
-    background-color: rgba(199, 170, 92, 0.1) !important;
+    background: linear-gradient(180deg, #2a2518 0%, #000000 100%) !important;
     color: var(--gold-bright) !important;
     border: 1px solid var(--gold-primary) !important;
-    border-radius: 2px !important;
+    border-radius: 0px !important;
     font-family: 'Cinzel', serif !important;
     font-weight: bold !important;
-    padding: 0.6rem 1.2rem !important;
+    letter-spacing: 2px;
+    padding: 0.8rem !important;
     transition: all 0.3s ease !important;
-    width: 100%;
 }
 
 div.stButton > button:hover {
-    background-color: var(--gold-primary) !important;
-    color: var(--bg-dark) !important;
-    box-shadow: 0 0 15px var(--gold-primary);
+    background: var(--gold-primary) !important;
+    color: black !important;
+    box-shadow: 0 0 20px var(--gold-primary);
 }
 
-/* Selectbox/Input styling */
-.stSelectbox div[data-baseweb="select"] {
-    background-color: #1a1a1d !important;
-    border: 1px solid var(--gold-darker) !important;
+/* Metric & Details */
+[data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
+[data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
+
+.gold-hr {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+    margin: 2rem 0;
 }
 
-/* Expander Style */
-.streamlit-expanderHeader {
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid var(--gold-darker) !important;
-    color: var(--gold-bright) !important;
+.stat-card {
+    border-left: 2px solid var(--gold-darker);
+    padding-left: 15px;
+    margin-bottom: 20px;
 }
-
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
 # ----------------------------
-# Data Logic
+# Data Structure & Full Content
 # ----------------------------
 @dataclass
 class StatItem:
     headline: str
     value: str
     detail_ko: str
-    notes: str = ""
 
 @dataclass
 class Category:
     title_en: str
     description_ko: str
     items: list
+    img_url: str = "" # 카테고리별 사진
 
-# Data Injection (Fixed common spacing/char errors)
 CATEGORIES = [
     Category(
-        title_en="Honour Mode",
-        description_ko="치명적인 난이도, 단 하나의 세이브. 명예 모드의 기록입니다.",
-        items=[
-            StatItem("Conquered Honour Mode", "141,660", "141,660명의 모험가가 명예 모드를 정복했습니다."),
-            StatItem("Defeats (Total)", "1,223,305", "1,223,305개의 여정이 중간에 종결되었습니다."),
-            StatItem("Level 1 Legend", "4,647", "4,647명은 레벨 1로만 명예 모드를 클리어했습니다."),
-            StatItem("Honourably Deleted", "76%", "실패자의 76%는 미련 없이 세이브 파일을 삭제했습니다."),
+        "Most Importantly",
+        "커뮤니티에서 가장 화제가 된 특이하고 재미있는 기록들입니다.",
+        [
+            StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신하는 굴욕(혹은 행운)을 겪었습니다."),
+            StatItem("Friendly Dinosaurs", "3.5 million", "350만 명이 쥬라기 시대를 방불케 하는 친절한 공룡들을 만났습니다."),
+            StatItem("Freed Us", "2 million", "200만 명의 플레이어가 지능 포식자 '우리(Us)'를 해방해 주었습니다."),
+            StatItem("Spared Alfira", "377,000+", "다크 어지의 숙명을 거스르고 알피라를 살려낸 의지의 기록입니다.")
         ],
+        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Special+Moments+Illustration" # 이미지 주소 교체 가능
     ),
     Category(
-        title_en="Romance & Bonds",
-        description_ko="캠프에서 피어난 연정의 통계입니다.",
-        items=[
-            StatItem("Total Kisses", "75M+", "동료들과의 입맞춤이 7,500만 번을 넘었습니다."),
-            StatItem("Shadowheart", "27M", "로맨스 1위는 섀도하트가 차지했습니다."),
-            StatItem("The Emperor", "1.1M", "110만 명의 플레이어가 황제와 깊은 관계를 맺었습니다."),
-            StatItem("Bear Form", "30%", "할신과의 관계 중 30%는 곰 형태에서 이루어졌습니다."),
+        "Honour Mode",
+        "치명적인 난이도와 단 하나의 세이브 파일. 영광스러운 정복자들의 수치입니다.",
+        [
+            StatItem("Conquered", "141,660", "황금 주사위를 쟁취하며 명예를 증명한 수입니다."),
+            StatItem("Level 1 Only", "4,647", "레벨 1로 명예를 클리어한 믿기 힘든 기록입니다."),
+            StatItem("Defeats", "1,223,305", "실패로 끝난 명예 모드 횟수입니다."),
+            StatItem("Honourable Choice", "76%", "실패 후 76%는 명예롭게 세이브를 지웠고, 24%는 모험을 이어갔습니다.")
         ],
+        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Honour+Mode+Banner"
     ),
     Category(
-        title_en="The Furry Friends",
-        description_ko="모험 중 만난 가장 충성스러운 동료들의 기록입니다.",
-        items=[
-            StatItem("Scratch", "120M Pets", "스크래치는 1억 2천만 번 넘게 쓰다듬어졌습니다."),
-            StatItem("Owlbear Cub", "41M Pets", "아울베어 새끼도 4,100만 번의 사랑을 받았습니다."),
-            StatItem("His Majesty", "141,660", "14만 명이 감히 폐하를 쓰다듬으려 시도했습니다."),
+        "Origin & Avatars",
+        "누가 이 거대한 서사의 중심에 섰을까요?",
+        [
+            StatItem("Custom Avatar", "93%+", "대부분의 모험가는 자신만의 영웅을 직접 빚어냈습니다."),
+            StatItem("Astarion", "1.21 M", "오리진 캐릭터 중 가장 많은 선택을 받은 주인공입니다."),
+            StatItem("Gale", "1.20 M", "마법사 게일이 아주 근소한 차이로 뒤를 잇습니다."),
+            StatItem("Shadowheart", "0.86 M", "섀도하트가 오리진 선택지 중 3위를 차지했습니다.")
         ],
+        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Origin+Characters"
+    ),
+    Category(
+        "Romance & Intimacy",
+        "캠프에서의 사랑은 전투만큼이나 치열했습니다.",
+        [
+            StatItem("Companion Kisses", "75M+", "동료들과 나눈 입맞춤은 이미 7,500만 번을 돌파했습니다."),
+            StatItem("Kiss Leader", "Shadowheart", "2,700만 번의 키스로 섀도하트가 독보적 1위를 기록했습니다."),
+            StatItem("The Emperor", "1.1 million", "110만 명의 모험가가 마인드 플레이어와 사랑을 나누었습니다."),
+            StatItem("Halsin Split", "70% / 30%", "할신과의 관계 중 30%는 곰의 형상으로 이루어졌습니다.")
+        ],
+        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Romance+Statistics"
+    ),
+    Category(
+        "Pets & Epilogues",
+        "동물 친구들과의 교감, 그리고 그 후의 이야기입니다.",
+        [
+            StatItem("Scratch", "120 million", "스크래치는 세상에서 가장 많이 사랑받은 강아지입니다."),
+            StatItem("Owlbear Cub", "41 million", "아울베어 새끼 역시 수천만 번의 손길을 받았습니다."),
+            StatItem("Halsin Hug", "1.1 million", "에필로그에서 110만 명의 플레이어가 할신을 안아주었습니다."),
+            StatItem("Petted Tara", "54,000", "게일의 친구 타라를 쓰다듬은 정성 어린 기록입니다.")
+        ]
+    ),
+    Category(
+        "Class Respec Stats",
+        "운명을 바꾼 모험가들. 리스펙(Respec)의 모든 것입니다.",
+        [
+            StatItem("Shadowheart", "4.89M times", "가장 많이 직업이 바뀐 동료 1위입니다."),
+            StatItem("Wyll", "1.41M times", "와일은 주로 헥스블레이드로 새로운 길을 찾았습니다."),
+            StatItem("Minsc", "350 people", "민스크를 '죽음 권역' 클레릭으로 바꾼 독특한 취향의 모험가들입니다."),
+            StatItem("Multiclass", "2.30%", "단 한 번의 플레이로 모든 클래스를 경험한 달인들입니다.")
+        ]
     )
 ]
 
 # ----------------------------
-# Navigation Logic
+# Session State
 # ----------------------------
 if "page" not in st.session_state:
     st.session_state.page = "Home"
+if "selected_cat" not in st.session_state:
+    st.session_state.selected_cat = CATEGORIES[0].title_en
 
-def go(page_name: str):
+def go(page_name):
     st.session_state.page = page_name
 
 # ----------------------------
 # Page Renderers
 # ----------------------------
-def render_header():
-    st.markdown('<div style="text-align: center; margin-top: 20px;">', unsafe_allow_html=True)
-    st.markdown('<div class="bigtitle" style="font-size: 4rem;">BALDUR\'S GATE III</div>', unsafe_allow_html=True)
-    st.markdown('<div style="letter-spacing: 5px; color: var(--gold-primary); font-family: Cinzel;">THE GREAT ARCHIVE</div>', unsafe_allow_html=True)
-    st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
-def page_home():
-    render_header()
+# --- HOME PAGE ---
+if st.session_state.page == "Home":
+    # 1. 대표 배너 사진 (URL 입력 가능)
+    st.image("https://via.placeholder.com/1400x500/0a0a0c/c7aa5c?text=BALDUR'S+GATE+3+DATABASE", use_container_width=True)
     
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
+    st.markdown('<div class="bigtitle" style="font-size: 5rem; margin-top: -80px;">ARCHIVE OF FATE</div>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align:center; font-family:Cinzel; letter-spacing:5px;">A Repository of Every Decision, Every Roll, Every Death.</p>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns([1, 1.5, 1])
+    with c2:
         st.markdown('<div class="bg3-panel">', unsafe_allow_html=True)
-        st.write("주사위는 던져졌습니다. 라리안 스튜디오에서 제공한 공식 데이터를 기반으로 기록된 모험가들의 흔적을 탐색하십시오.")
-        
+        st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다. 당신의 모험은 이 숫자들 중 어디에 속해 있습니까?")
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("기록 보관소 입장 (Browse Stats)"):
+        if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
             go("Browse")
-        if st.button("데이터 추출 (Export Data)"):
-            go("Export")
         st.markdown('</div>', unsafe_allow_html=True)
 
-def page_browse():
-    render_header()
-    
-    col_nav, col_content = st.columns([1, 3])
+# --- BROWSE PAGE ---
+elif st.session_state.page == "Browse":
+    st.markdown('<div style="padding: 1rem 0;">', unsafe_allow_html=True)
+    st.markdown('<h2 style="text-align: left; font-size: 2.5rem;">The Archive</h2>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    col_nav, col_main = st.columns([0.8, 2.2], gap="large")
     
     with col_nav:
-        st.markdown("### Categories")
+        st.markdown('<div class="bg3-panel" style="padding: 1.5rem;">', unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold;">Navigation</p>', unsafe_allow_html=True)
         for cat in CATEGORIES:
-            if st.button(cat.title_en):
+            if st.button(cat.title_en, use_container_width=True):
                 st.session_state.selected_cat = cat.title_en
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("← Main Menu"):
+        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+        if st.button("← Main Menu", use_container_width=True):
             go("Home")
-
-    with col_content:
-        selected_name = st.session_state.get("selected_cat", CATEGORIES[0].title_en)
-        cat = next(c for c in CATEGORIES if c.title_en == selected_name)
-        
-        st.markdown(f'<div class="bg3-panel">', unsafe_allow_html=True)
-        st.markdown(f"<h2>{cat.title_en}</h2>", unsafe_allow_html=True)
-        st.write(cat.description_ko)
-        st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
-        
-        # Metrics display
-        m_cols = st.columns(len(cat.items))
-        for i, item in enumerate(cat.items):
-            with m_cols[i % len(m_cols)]:
-                st.metric(label=item.headline, value=item.value)
-                st.caption(item.detail_ko)
         st.markdown('</div>', unsafe_allow_html=True)
 
-def page_export():
-    render_header()
-    st.markdown('<div class="bg3-panel">', unsafe_allow_html=True)
-    st.markdown("### Scroll of Data")
-    st.write("아카이브의 모든 데이터를 JSON 형태로 두루마리에 복사합니다.")
-    
-    full_data = [asdict(c) for c in CATEGORIES]
-    st.code(json.dumps(full_data, indent=4, ensure_ascii=False), language="json")
-    
-    if st.button("← Return"):
-        go("Home")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ----------------------------
-# Router
-# ----------------------------
-if st.session_state.page == "Home":
-    page_home()
-elif st.session_state.page == "Browse":
-    page_browse()
-elif st.session_state.page == "Export":
-    page_export()
+    with col_main:
+        # 선택된 카테고리 데이터 찾기
+        current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
+        
+        # 2. 카테고리별 사진 (설정된 경우에만 표시)
+        if current_cat.img_url:
+            st.image(current_cat.img_url, use_container_width=True)
+        
+        st.markdown(f'<div class="bg3-panel">', unsafe_allow_html=True)
+        st.markdown(f'<h1 style="text-align: left; font-size: 3rem; margin-bottom: 0;">{current_cat.title_en}</h1>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
+        st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
+        
+        # 통계 아이템 렌더링 (2개씩 정렬)
+        for i in range(0, len(current_cat.items), 2):
+            m_col1, m_col2 = st.columns(2)
+            
+            # 첫 번째 아이템
+            with m_col1:
+                item = current_cat.items[i]
+                st.markdown(f'<div class="stat-card">', unsafe_allow_html=True)
+                st.metric(label=item.headline, value=item.value)
+                st.write(item.detail_ko)
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # 두 번째 아이템 (존재하는 경우)
+            if i + 1 < len(current_cat.items):
+                with m_col2:
+                    item = current_cat.items[i+1]
+                    st.markdown(f'<div class="stat-card">', unsafe_allow_html=True)
+                    st.metric(label=item.headline, value=item.value)
+                    st.write(item.detail_ko)
+                    st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
