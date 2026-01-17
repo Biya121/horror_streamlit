@@ -32,25 +32,21 @@ CSS = """
     --accent-red: #8b0000;
 }
 
-/* 상단 흰색 헤더 제거 */
 header[data-testid="stHeader"] {
     background-color: rgba(0,0,0,0) !important;
 }
 
-/* 전체 앱 배경 */
 .stApp {
     background-color: var(--bg-dark);
     background-image: radial-gradient(circle at 50% -20%, #2a2518 0%, #070708 80%);
     color: var(--text-main);
 }
 
-/* 사이드바 배경 */
 section[data-testid="stSidebar"] {
     background-color: var(--bg-dark) !important;
     border-right: 1px solid var(--gold-darker);
 }
 
-/* 타이포그래피 */
 h1, h2, h3, .bigtitle {
     font-family: 'Cinzel', serif !important;
     color: var(--gold-bright) !important;
@@ -58,7 +54,6 @@ h1, h2, h3, .bigtitle {
     text-align: center;
 }
 
-/* 커스텀 버튼 */
 div.stButton > button {
     background: linear-gradient(180deg, #2a2518 0%, #000000 100%) !important;
     color: var(--gold-bright) !important;
@@ -77,7 +72,6 @@ div.stButton > button:hover {
     box-shadow: 0 0 20px var(--gold-primary);
 }
 
-/* 검색창 스타일 */
 div[data-testid="stTextInput"] input {
     background-color: #121214 !important;
     color: var(--gold-bright) !important;
@@ -85,7 +79,6 @@ div[data-testid="stTextInput"] input {
     font-family: 'Cinzel', serif;
 }
 
-/* 메트릭 및 카드 */
 [data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
 [data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
 
@@ -121,13 +114,13 @@ class Category:
     img_url: str = "" 
 
 CATEGORIES = [
-    Category("Most Importantly", "커뮤니티에서 가장 화제가 된 특이하고 재미있는 기록들입니다.", [
-        StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신하는 굴욕을 겪었습니다."),
+    Category("Most Importantly", "커뮤니티에서 화제가 된 특이한 기록들입니다.", [
+        StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신했습니다."),
         StatItem("Friendly Dinosaurs", "3.5 million", "350만 명이 친절한 공룡들을 만났습니다."),
-        StatItem("Freed Us", "2 million", "플레이어 200만 명이 지능 포식자 '우리'를 해방했습니다."),
+        StatItem("Freed Us", "2 million", "200만 명의 플레이어가 '우리'를 해방했습니다."),
         StatItem("Spared Alfira", "377,000+", "다크 어지의 숙명을 거스르고 알피라를 살려냈습니다.")
     ], "https://pbs.twimg.com/media/GUYneuVXkAAhKSS?format=jpg&name=medium"),
-    Category("Honour Mode", "영광스러운 정복자들의 수치입니다.", [
+    Category("Honour Mode", "영광스러운 정복자들의 기록입니다.", [
         StatItem("Conquered", "141,660", "황금 주사위를 쟁취하며 명예를 증명했습니다."),
         StatItem("Level 1 Only", "4,647", "레벨 1로 명예를 클리어한 기록입니다."),
         StatItem("Defeats", "1,223,305", "실패로 끝난 명예 모드 횟수입니다."),
@@ -136,7 +129,7 @@ CATEGORIES = [
     Category("Origin & Avatars", "누가 서사의 중심에 섰을까요?", [
         StatItem("Custom Avatar", "93%+", "대부분은 자신만의 영웅을 직접 빚어냈습니다."),
         StatItem("Astarion", "1.21 M", "오리진 캐릭터 중 가장 많은 선택을 받았습니다."),
-        StatItem("Gale", "1.20 M", "마법사 게일이 근소한 차이로 뒤를 잇습니다."),
+        StatItem("Gale", "1.20 M", "마법사 게일이 아주 근소한 차이로 뒤를 잇습니다."),
         StatItem("Shadowheart", "0.86 M", "섀도하트가 오리진 선택지 중 3위입니다.")
     ], "https://pbs.twimg.com/media/GUYoM75WsAAFgNc?format=jpg&name=medium"),
     Category("Romance & Intimacy", "캠프에서의 사랑 기록입니다.", [
@@ -197,34 +190,37 @@ if st.session_state.page == "Home":
 
 elif st.session_state.page == "Browse":
     with st.sidebar:
-        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Search Archive</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
         
-        # --- 1. 엔터만 치면 바로 검색되는 기능 ---
-        search_query = st.text_input("", placeholder="Enter Category Name...", label_visibility="collapsed")
+        # 1. 기존 카테고리 버튼들 유지
+        for cat in CATEGORIES:
+            if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
+                st.session_state.selected_cat = cat.title_en
         
+        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+        
+        if st.button("← Main Menu", key="back_home", use_container_width=True):
+            go("Home")
+            
+        # 2. 카테고리 검색창 (엔터 기능)
+        st.markdown('<p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem;">Quick Search</p>', unsafe_allow_html=True)
+        search_query = st.text_input("", placeholder="Enter & Move...", label_visibility="collapsed")
         if search_query:
-            # 입력값과 유사한 카테고리 하나를 즉시 선택
             match = next((c for c in CATEGORIES if search_query.lower() in c.title_en.lower()), None)
             if match:
                 st.session_state.selected_cat = match.title_en
-                st.success(f"Found: {match.title_en}")
-            else:
-                st.error("No matches found.")
 
-        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
-
-        # --- 2. Welcome 버튼 & 칼 이모지 효과 ---
+        # 3. Welcome! 버튼 & 칼 이모지 효과
         if st.button("Welcome!", use_container_width=True):
-            st.balloons() # 기본 벌룬 효과와 함께
+            st.balloons()
             st.toast("⚔️ The Blade of Destiny descends!")
-            # 칼 이모지 수동 눈 내림 효과 모사
-            for _ in range(3):
-                st.markdown("### ⚔️ 🗡️ ⚔️ 🗡️ ⚔️")
+            # 칼 이모지 낙하 효과 시뮬레이션
+            swords = st.empty()
+            for _ in range(5):
+                swords.markdown("<h3 style='text-align:center;'>⚔️ 🗡️ ⚔️ 🗡️ ⚔️</h3>", unsafe_allow_html=True)
                 time.sleep(0.1)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("← Main Menu", key="back_home", use_container_width=True):
-            go("Home")
+                swords.empty()
+                time.sleep(0.1)
 
     # 메인 콘텐츠 영역
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
@@ -237,7 +233,6 @@ elif st.session_state.page == "Browse":
     st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
-    # 갤러리 및 통계 렌더링
     if current_cat.title_en == "Gallery":
         for i in range(0, len(current_cat.items), 2):
             g_col1, g_col2 = st.columns(2)
