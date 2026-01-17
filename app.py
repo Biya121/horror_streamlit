@@ -185,6 +185,14 @@ CATEGORIES = [
         [
             # 아래 형식으로 사진 제목과 이미지 링크를 계속 추가할 수 있습니다.
             StatItem("", "assets/photo1.gif", ""),
+            StatItem("", "assets/photo2.gif", ""),
+            StatItem("", "assets/photo3.gif", ""),
+            StatItem("", "assets/photo4.gif", ""),
+            StatItem("", "assets/photo5.gif", ""),
+            StatItem("", "assets/photo6.gif", ""),
+            StatItem("", "assets/photo7.gif", ""),
+            StatItem("", "assets/photo8.gif", ""),
+            StatItem("", "assets/photo9.gif", "")
         ],
     )
 ]
