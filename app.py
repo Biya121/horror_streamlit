@@ -206,7 +206,6 @@ if st.session_state.page == "Home":
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
-        st.markdown('<div class="bg3-panel">', unsafe_allow_html=True)
         st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다. 당신의 모험은 이 숫자들 중 어디에 속해 있습니까?")
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
@@ -238,7 +237,6 @@ elif st.session_state.page == "Browse":
         if current_cat.img_url:
             st.image(current_cat.img_url, use_container_width=True)
         
-        st.markdown('<div class="bg3-panel">', unsafe_allow_html=True)
         st.markdown(f'<h1 style="text-align: left; font-size: 3rem; margin-bottom: 0;">{current_cat.title_en}</h1>', unsafe_allow_html=True)
         st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
         st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
