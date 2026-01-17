@@ -11,11 +11,11 @@ st.set_page_config(
     page_title="BG3 — Tome of Statistics",
     page_icon="🎲",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded", # 메뉴 확인을 위해 기본 확장 상태로 설정
 )
 
 # ----------------------------
-# Enhanced CSS (Obsidian & Antique Gold + Sticky Navigation)
+# Enhanced CSS (Obsidian & Antique Gold)
 # ----------------------------
 CSS = """
 <style>
@@ -39,11 +39,10 @@ CSS = """
     color: var(--text-main);
 }
 
-/* Navigation Sticky (스크롤 따라오기) */
-[data-testid="column"]:nth-child(1) [data-testid="stVerticalBlock"] {
-    position: sticky;
-    top: 2rem;
-    z-index: 99;
+/* Sidebar Styling */
+[data-testid="stSidebar"] {
+    background-color: var(--panel-dark);
+    border-right: 1px solid var(--gold-darker);
 }
 
 /* Header & Typography */
@@ -52,18 +51,6 @@ h1, h2, h3, .bigtitle {
     color: var(--gold-bright) !important;
     text-shadow: 0 0 15px rgba(199, 170, 92, 0.4);
     text-align: center;
-}
-
-/* BG3 Obsidian Panel */
-.bg3-panel {
-    background: var(--panel-dark);
-    border: 1px solid var(--gold-darker);
-    border-top: 2px solid var(--gold-primary);
-    border-radius: 2px;
-    padding: 2.5rem;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-    margin-bottom: 2rem;
-    position: relative;
 }
 
 /* Custom Button (BG3 Gold Style) */
@@ -232,39 +219,50 @@ if st.session_state.page == "Home":
             go("Browse")
 
 elif st.session_state.page == "Browse":
+    # 1. 사이드바 고정 네비게이션 적용
+    with st.sidebar:
+        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
+        for cat in CATEGORIES:
+            # 사이드바 버튼은 메인 화면 버튼과 겹치지 않게 key값 조절
+            if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
+                st.session_state.selected_cat = cat.title_en
+        
+        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+        if st.button("← Main Menu", key="back_home", use_container_width=True):
+            go("Home")
+
+    # 2. 메인 콘텐츠 영역
     st.markdown('<div style="padding: 1rem 0;">', unsafe_allow_html=True)
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem;">The Archive</h2>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    col_nav, col_main = st.columns([0.8, 2.2], gap="large")
+    current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
     
-    with col_nav:
-        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold;">Navigation</p>', unsafe_allow_html=True)
-        for cat in CATEGORIES:
-            if st.button(cat.title_en, key=cat.title_en, use_container_width=True):
-                st.session_state.selected_cat = cat.title_en
-        
-        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
-        if st.button("← Main Menu", use_container_width=True):
-            go("Home")
+    if current_cat.img_url:
+        st.image(current_cat.img_url, use_container_width=True)
+    
+    st.markdown(f'<h1 style="text-align: left; font-size: 3rem; margin-bottom: 0;">{current_cat.title_en}</h1>', unsafe_allow_html=True)
+    st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
+    st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
-    with col_main:
-        current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
-        
-        if current_cat.img_url:
-            st.image(current_cat.img_url, use_container_width=True)
-        
-        st.markdown(f'<h1 style="text-align: left; font-size: 3rem; margin-bottom: 0;">{current_cat.title_en}</h1>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
-        st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
-
-        # --- 갤러리 카테고리인 경우 ---
-        if current_cat.title_en == "Gallery":
-            for i in range(0, len(current_cat.items), 2):
-                g_col1, g_col2 = st.columns(2)
-                
-                with g_col1:
-                    item = current_cat.items[i]
+    # --- 갤러리 카테고리인 경우 ---
+    if current_cat.title_en == "Gallery":
+        for i in range(0, len(current_cat.items), 2):
+            g_col1, g_col2 = st.columns(2)
+            
+            with g_col1:
+                item = current_cat.items[i]
+                if os.path.exists(item.value):
+                    st.image(item.value, use_container_width=True)
+                else:
+                    st.warning(f"File not found: {item.value}")
+                    
+                if item.headline: st.markdown(f"**{item.headline}**")
+                if item.detail_ko: st.caption(item.detail_ko)
+            
+            if i + 1 < len(current_cat.items):
+                with g_col2:
+                    item = current_cat.items[i+1]
                     if os.path.exists(item.value):
                         st.image(item.value, use_container_width=True)
                     else:
@@ -272,34 +270,23 @@ elif st.session_state.page == "Browse":
                         
                     if item.headline: st.markdown(f"**{item.headline}**")
                     if item.detail_ko: st.caption(item.detail_ko)
-                
-                if i + 1 < len(current_cat.items):
-                    with g_col2:
-                        item = current_cat.items[i+1]
-                        if os.path.exists(item.value):
-                            st.image(item.value, use_container_width=True)
-                        else:
-                            st.warning(f"File not found: {item.value}")
-                            
-                        if item.headline: st.markdown(f"**{item.headline}**")
-                        if item.detail_ko: st.caption(item.detail_ko)
-        
-        # --- 그 외 일반 통계 카테고리인 경우 ---
-        else:
-            for i in range(0, len(current_cat.items), 2):
-                m_col1, m_col2 = st.columns(2)
-                
-                with m_col1:
-                    item = current_cat.items[i]
+    
+    # --- 그 외 일반 통계 카테고리인 경우 ---
+    else:
+        for i in range(0, len(current_cat.items), 2):
+            m_col1, m_col2 = st.columns(2)
+            
+            with m_col1:
+                item = current_cat.items[i]
+                st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+                st.metric(label=item.headline, value=item.value)
+                st.write(item.detail_ko)
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            if i + 1 < len(current_cat.items):
+                with m_col2:
+                    item = current_cat.items[i+1]
                     st.markdown('<div class="stat-card">', unsafe_allow_html=True)
                     st.metric(label=item.headline, value=item.value)
                     st.write(item.detail_ko)
                     st.markdown('</div>', unsafe_allow_html=True)
-                
-                if i + 1 < len(current_cat.items):
-                    with m_col2:
-                        item = current_cat.items[i+1]
-                        st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                        st.metric(label=item.headline, value=item.value)
-                        st.write(item.detail_ko)
-                        st.markdown('</div>', unsafe_allow_html=True)
