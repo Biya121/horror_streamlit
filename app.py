@@ -239,7 +239,7 @@ elif st.session_state.page == "Browse":
             go("Home")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col_main:
+with col_main:
         current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
         
         if current_cat.img_url:
@@ -248,23 +248,42 @@ elif st.session_state.page == "Browse":
         st.markdown(f'<h1 style="text-align: left; font-size: 3rem; margin-bottom: 0;">{current_cat.title_en}</h1>', unsafe_allow_html=True)
         st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
         st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
+
+        # --- 갤러리 카테고리인 경우 ---
+        if current_cat.title_en == "Gallery":
+            for i in range(0, len(current_cat.items), 2):
+                g_col1, g_col2 = st.columns(2)
+                
+                with g_col1:
+                    item = current_cat.items[i]
+                    # st.metric 대신 st.image를 사용합니다.
+                    st.image(item.value, use_container_width=True)
+                    if item.headline: st.markdown(f"**{item.headline}**")
+                    if item.detail_ko: st.caption(item.detail_ko)
+                
+                if i + 1 < len(current_cat.items):
+                    with g_col2:
+                        item = current_cat.items[i+1]
+                        st.image(item.value, use_container_width=True)
+                        if item.headline: st.markdown(f"**{item.headline}**")
+                        if item.detail_ko: st.caption(item.detail_ko)
         
-        for i in range(0, len(current_cat.items), 2):
-            m_col1, m_col2 = st.columns(2)
-            
-            with m_col1:
-                item = current_cat.items[i]
-                st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                st.metric(label=item.headline, value=item.value)
-                st.write(item.detail_ko)
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            if i + 1 < len(current_cat.items):
-                with m_col2:
-                    item = current_cat.items[i+1]
+        # --- 그 외 일반 통계 카테고리인 경우 ---
+        else:
+            for i in range(0, len(current_cat.items), 2):
+                m_col1, m_col2 = st.columns(2)
+                
+                with m_col1:
+                    item = current_cat.items[i]
                     st.markdown('<div class="stat-card">', unsafe_allow_html=True)
                     st.metric(label=item.headline, value=item.value)
                     st.write(item.detail_ko)
                     st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+                
+                if i + 1 < len(current_cat.items):
+                    with m_col2:
+                        item = current_cat.items[i+1]
+                        st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+                        st.metric(label=item.headline, value=item.value)
+                        st.write(item.detail_ko)
+                        st.markdown('</div>', unsafe_allow_html=True)
