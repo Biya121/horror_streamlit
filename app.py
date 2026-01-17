@@ -186,11 +186,8 @@ CATEGORIES = [
         [
             StatItem("", "assets/photo1.gif", ""),
             StatItem("", "assets/photo2.gif", ""),
-            StatItem("", "assets/photo3.gif", ""),
             StatItem("", "assets/photo4.gif", ""),
             StatItem("", "assets/photo5.gif", ""),
-            StatItem("", "assets/photo6.gif", ""),
-            StatItem("", "assets/photo7.gif", ""),
             StatItem("", "assets/photo8.gif", "")
         ],
     )
@@ -221,7 +218,7 @@ if st.session_state.page == "Home":
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
-        st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다. 당신의 모험은 이 숫자들 중 어디에 속해 있습니까?")
+        st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다.")
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
             go("Browse")
