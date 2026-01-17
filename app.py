@@ -11,11 +11,11 @@ st.set_page_config(
     page_title="BG3 — Tome of Statistics",
     page_icon="🎲",
     layout="wide",
-    initial_sidebar_state="expanded", # 메뉴 확인을 위해 기본 확장 상태로 설정
+    initial_sidebar_state="expanded",
 )
 
 # ----------------------------
-# Enhanced CSS (Obsidian & Antique Gold)
+# Enhanced CSS (All Black Theme & Sticky Sidebar)
 # ----------------------------
 CSS = """
 <style>
@@ -32,20 +32,25 @@ CSS = """
     --accent-red: #8b0000;
 }
 
-/* Base App Style */
+/* 1. 상단 흰색 헤더 영역을 검은색으로 강제 수정 */
+header[data-testid="stHeader"] {
+    background-color: rgba(0,0,0,0) !important;
+}
+
+/* 2. 전체 앱 배경 설정 */
 .stApp {
     background-color: var(--bg-dark);
     background-image: radial-gradient(circle at 50% -20%, #2a2518 0%, #070708 80%);
     color: var(--text-main);
 }
 
-/* Sidebar Styling */
-[data-testid="stSidebar"] {
-    background-color: var(--panel-dark);
+/* 3. 사이드바 내부 배경 및 테두리 설정 */
+section[data-testid="stSidebar"] {
+    background-color: var(--bg-dark) !important;
     border-right: 1px solid var(--gold-darker);
 }
 
-/* Header & Typography */
+/* 4. 타이포그래피 설정 */
 h1, h2, h3, .bigtitle {
     font-family: 'Cinzel', serif !important;
     color: var(--gold-bright) !important;
@@ -53,7 +58,7 @@ h1, h2, h3, .bigtitle {
     text-align: center;
 }
 
-/* Custom Button (BG3 Gold Style) */
+/* 5. 커스텀 버튼 스타일 (BG3 골드 테마) */
 div.stButton > button {
     background: linear-gradient(180deg, #2a2518 0%, #000000 100%) !important;
     color: var(--gold-bright) !important;
@@ -72,7 +77,7 @@ div.stButton > button:hover {
     box-shadow: 0 0 20px var(--gold-primary);
 }
 
-/* Metric & Details */
+/* 6. 메트릭 및 장식 요소 */
 [data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
 [data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
 
@@ -219,11 +224,10 @@ if st.session_state.page == "Home":
             go("Browse")
 
 elif st.session_state.page == "Browse":
-    # 1. 사이드바 고정 네비게이션 적용
+    # 1. 사이드바 영역 (네비게이션 고정)
     with st.sidebar:
         st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
         for cat in CATEGORIES:
-            # 사이드바 버튼은 메인 화면 버튼과 겹치지 않게 key값 조절
             if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
                 st.session_state.selected_cat = cat.title_en
         
@@ -231,10 +235,8 @@ elif st.session_state.page == "Browse":
         if st.button("← Main Menu", key="back_home", use_container_width=True):
             go("Home")
 
-    # 2. 메인 콘텐츠 영역
-    st.markdown('<div style="padding: 1rem 0;">', unsafe_allow_html=True)
-    st.markdown('<h2 style="text-align: left; font-size: 2.5rem;">The Archive</h2>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # 2. 메인 콘텐츠 영역 (사이드바 덕분에 상단 여백 제거됨)
+    st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
 
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
     
@@ -245,7 +247,7 @@ elif st.session_state.page == "Browse":
     st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
-    # --- 갤러리 카테고리인 경우 ---
+    # --- 갤러리 카테고리 ---
     if current_cat.title_en == "Gallery":
         for i in range(0, len(current_cat.items), 2):
             g_col1, g_col2 = st.columns(2)
@@ -271,7 +273,7 @@ elif st.session_state.page == "Browse":
                     if item.headline: st.markdown(f"**{item.headline}**")
                     if item.detail_ko: st.caption(item.detail_ko)
     
-    # --- 그 외 일반 통계 카테고리인 경우 ---
+    # --- 일반 통계 카테고리 ---
     else:
         for i in range(0, len(current_cat.items), 2):
             m_col1, m_col2 = st.columns(2)
