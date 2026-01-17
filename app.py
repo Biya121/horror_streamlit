@@ -178,8 +178,27 @@ CATEGORIES = [
             StatItem("Multiclass", "2.30%", "단 한 번의 플레이로 모든 클래스를 경험한 달인들입니다.")
         ],
         "https://pbs.twimg.com/media/GxhDmNaXcAADB9_?format=jpg&name=medium"
+    ),
+    Category(
+        "Gallery",
+        "모험의 순간들을 기록한 이미지 저장소입니다.",
+        [
+            # 아래 형식으로 사진 제목과 이미지 링크를 계속 추가할 수 있습니다.
+            StatItem("https://64.media.tumblr.com/2a1ecd20427257f566929999a67dac8a/fed26bc085fef57f-24/s540x810/d7517fee5ce53c7c3154e47762fca3df54ad37fd.gif"),
+            StatItem("https://64.media.tumblr.com/bf34b2f35ce6208eeffc8d1d84a40ed3/e32fda6a4fbf2edd-56/s540x810/fca772243cf0515e0ed6fb7907f666383c7bca85.gifv"),
+            StatItem("https://64.media.tumblr.com/6d76656bb8c7698776a43a1e41e0cb96/f85e99cc9e3ab27e-92/s500x750/ec4172ef72a8315deee842826daba3d7e21273c1.gifv"),
+            StatItem("https://64.media.tumblr.com/dc53a5fc3eafca38a8b695e4ac6b6a00/f85e99cc9e3ab27e-68/s500x750/923b9a0b8f2f2ddf798ba70b853e6e12f71b0298.gifv"),
+            StatItem("https://giffiles.alphacoders.com/218/218415.gif"),
+            StatItem("https://parryeverything.com/wp-content/uploads/2023/08/dungeoneering.gif"),
+            StatItem("https://i.redd.it/ggqeitnihtkb1.gif"),
+            StatItem("https://parryeverything.com/wp-content/uploads/2023/08/dungeoneering.gif"),
+            
+
+        ],
+        "" # 갤러리 상단에는 별도의 카테고리 이미지를 넣지 않으려면 비워둡니다.
     )
 ]
+
 
 # ----------------------------
 # Session State
