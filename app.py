@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # ----------------------------
-# Enhanced CSS (Obsidian & Antique Gold)
+# Enhanced CSS (Obsidian & Antique Gold + Sticky Navigation)
 # ----------------------------
 CSS = """
 <style>
@@ -37,6 +37,13 @@ CSS = """
     background-color: var(--bg-dark);
     background-image: radial-gradient(circle at 50% -20%, #2a2518 0%, #070708 80%);
     color: var(--text-main);
+}
+
+/* Navigation Sticky (스크롤 따라오기) */
+[data-testid="column"]:nth-child(1) [data-testid="stVerticalBlock"] {
+    position: sticky;
+    top: 2rem;
+    z-index: 99;
 }
 
 /* Header & Typography */
@@ -229,7 +236,6 @@ elif st.session_state.page == "Browse":
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem;">The Archive</h2>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # col_main 정의를 이 조건절 안으로 이동하여 NameError 방지
     col_nav, col_main = st.columns([0.8, 2.2], gap="large")
     
     with col_nav:
@@ -259,7 +265,6 @@ elif st.session_state.page == "Browse":
                 
                 with g_col1:
                     item = current_cat.items[i]
-                    # 파일 존재 여부 확인 후 출력 (MediaFileStorageError 방지)
                     if os.path.exists(item.value):
                         st.image(item.value, use_container_width=True)
                     else:
