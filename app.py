@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # ----------------------------
-# Enhanced CSS (All Black Theme & Sticky Sidebar)
+# Enhanced CSS (All Black Theme & Sticky Sidebar + Sword Animation)
 # ----------------------------
 CSS = """
 <style>
@@ -93,6 +93,21 @@ div[data-testid="stTextInput"] input {
     padding-left: 15px;
     margin-bottom: 20px;
 }
+
+/* --- Sword Falling Animation --- */
+@keyframes fall {
+    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+.sword-rain {
+    position: fixed;
+    top: -50px;
+    font-size: 2rem;
+    z-index: 9999;
+    pointer-events: none;
+    animation: fall 3s linear forwards;
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -167,6 +182,8 @@ if "page" not in st.session_state:
     st.session_state.page = "Home"
 if "selected_cat" not in st.session_state:
     st.session_state.selected_cat = CATEGORIES[0].title_en
+if "trigger_swords" not in st.session_state:
+    st.session_state.trigger_swords = False
 
 def go(page_name):
     st.session_state.page = page_name
@@ -192,7 +209,6 @@ elif st.session_state.page == "Browse":
     with st.sidebar:
         st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
         
-        # 1. 기존 카테고리 버튼들 유지
         for cat in CATEGORIES:
             if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
                 st.session_state.selected_cat = cat.title_en
@@ -202,7 +218,6 @@ elif st.session_state.page == "Browse":
         if st.button("← Main Menu", key="back_home", use_container_width=True):
             go("Home")
             
-        # 2. 카테고리 검색창 (엔터 기능)
         st.markdown('<p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem;">Quick Search</p>', unsafe_allow_html=True)
         search_query = st.text_input("", placeholder="Enter & Move...", label_visibility="collapsed")
         if search_query:
@@ -210,19 +225,23 @@ elif st.session_state.page == "Browse":
             if match:
                 st.session_state.selected_cat = match.title_en
 
-        # 3. Welcome! 버튼 & 칼 이모지 효과
+        # Welcome! 버튼 - 칼 이모지 낙하 효과
         if st.button("Welcome!", use_container_width=True):
-            st.balloons()
+            st.session_state.trigger_swords = True
             st.toast("⚔️ The Blade of Destiny descends!")
-            # 칼 이모지 낙하 효과 시뮬레이션
-            swords = st.empty()
-            for _ in range(5):
-                swords.markdown("<h3 style='text-align:center;'>⚔️ 🗡️ ⚔️ 🗡️ ⚔️</h3>", unsafe_allow_html=True)
-                time.sleep(0.1)
-                swords.empty()
-                time.sleep(0.1)
 
     # 메인 콘텐츠 영역
+    # 칼 낙하 애니메이션 주입 (애니메이션 트리거 시)
+    if st.session_state.trigger_swords:
+        sword_html = ""
+        import random
+        for i in range(20):  # 20개의 검 생성
+            left = random.randint(0, 95)
+            delay = random.uniform(0, 1.5)
+            sword_html += f'<div class="sword-rain" style="left: {left}%; animation-delay: {delay}s;">⚔️</div>'
+        st.markdown(sword_html, unsafe_allow_html=True)
+        st.session_state.trigger_swords = False # 리셋
+
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
     
