@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # ----------------------------
-# Enhanced CSS (All Black Theme & Sticky Sidebar)
+# Enhanced CSS (All Black Theme & Sword Rain Animation)
 # ----------------------------
 CSS = """
 <style>
@@ -23,13 +23,11 @@ CSS = """
 
 :root {
     --bg-dark: #070708;
-    --panel-dark: rgba(18, 18, 20, 0.95);
     --gold-primary: #c7aa5c;
     --gold-bright: #e7d6a2;
     --gold-darker: #5e4d26;
     --text-main: #f2efe6;
     --text-muted: #a8a08d;
-    --accent-red: #8b0000;
 }
 
 header[data-testid="stHeader"] {
@@ -79,8 +77,11 @@ div[data-testid="stTextInput"] input {
     font-family: 'Cinzel', serif;
 }
 
-[data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
-[data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
+.stat-card {
+    border-left: 2px solid var(--gold-darker);
+    padding-left: 15px;
+    margin-bottom: 20px;
+}
 
 .gold-hr {
     height: 1px;
@@ -88,10 +89,19 @@ div[data-testid="stTextInput"] input {
     margin: 2rem 0;
 }
 
-.stat-card {
-    border-left: 2px solid var(--gold-darker);
-    padding-left: 15px;
-    margin-bottom: 20px;
+/* 칼 이모지 낙하 애니메이션 */
+@keyframes sword-fall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+.sword-particle {
+    position: fixed;
+    top: -50px;
+    font-size: 2rem;
+    z-index: 9999;
+    pointer-events: none;
+    animation: sword-fall 3s linear forwards;
 }
 </style>
 """
@@ -178,21 +188,19 @@ def go(page_name):
 if st.session_state.page == "Home":
     st.image("https://giffiles.alphacoders.com/219/219996.gif", use_container_width=True)
     st.markdown('<div class="bigtitle" style="font-size: 5rem; margin-top: -80px;">ARCHIVE OF FATE</div>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align:center; font-family:Cinzel; letter-spacing:5px;">A Repository of Every Decision, Every Roll, Every Death.</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
-        st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다.")
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
+        st.write("발더스 게이트 3의 모험 기록들을 확인하세요.")
+        if st.button("Browse Stats", use_container_width=True):
             go("Browse")
 
 elif st.session_state.page == "Browse":
     with st.sidebar:
         st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
         
-        # 1. 기존 카테고리 버튼들 유지
+        # 1. 카테고리 버튼 (원형 유지)
         for cat in CATEGORIES:
             if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
                 st.session_state.selected_cat = cat.title_en
@@ -202,7 +210,7 @@ elif st.session_state.page == "Browse":
         if st.button("← Main Menu", key="back_home", use_container_width=True):
             go("Home")
             
-        # 2. 카테고리 검색창 (엔터 기능)
+        # 2. 검색창 (엔터 시 이동)
         st.markdown('<p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem;">Quick Search</p>', unsafe_allow_html=True)
         search_query = st.text_input("", placeholder="Enter & Move...", label_visibility="collapsed")
         if search_query:
@@ -210,19 +218,27 @@ elif st.session_state.page == "Browse":
             if match:
                 st.session_state.selected_cat = match.title_en
 
-        # 3. Welcome! 버튼 & 칼 이모지 효과
+        # 3. Welcome! 버튼 (칼 집중 투하 효과)
         if st.button("Welcome!", use_container_width=True):
-            st.balloons()
-            st.toast("⚔️ The Blade of Destiny descends!")
-            # 칼 이모지 낙하 효과 시뮬레이션
-            swords = st.empty()
-            for _ in range(5):
-                swords.markdown("<h3 style='text-align:center;'>⚔️ 🗡️ ⚔️ 🗡️ ⚔️</h3>", unsafe_allow_html=True)
+            st.toast("⚔️ Blade Rain Incoming!")
+            # HTML/CSS 파티클 생성
+            import random
+            sword_html = ""
+            for i in range(25): # 25개의 칼 투하
+                left = random.randint(0, 100)
+                delay = random.uniform(0, 2)
+                sword_html += f'<div class="sword-particle" style="left:{left}%; animation-delay:{delay}s;">⚔️</div>'
+            st.markdown(sword_html, unsafe_allow_html=True)
+            
+            # 사이드바 깜빡임 추가
+            swords_area = st.empty()
+            for _ in range(4):
+                swords_area.markdown("<h3 style='text-align:center;'>⚔️ 🗡️ ⚔️</h3>", unsafe_allow_html=True)
                 time.sleep(0.1)
-                swords.empty()
+                swords_area.empty()
                 time.sleep(0.1)
 
-    # 메인 콘텐츠 영역
+    # Main Area
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
     
@@ -233,22 +249,17 @@ elif st.session_state.page == "Browse":
     st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
+    # 렌더링 로직 (통계 및 갤러리)
     if current_cat.title_en == "Gallery":
         for i in range(0, len(current_cat.items), 2):
             g_col1, g_col2 = st.columns(2)
             with g_col1:
                 item = current_cat.items[i]
                 if os.path.exists(item.value): st.image(item.value, use_container_width=True)
-                else: st.warning(f"File not found: {item.value}")
-                if item.headline: st.markdown(f"**{item.headline}**")
-                if item.detail_ko: st.caption(item.detail_ko)
             if i + 1 < len(current_cat.items):
                 with g_col2:
                     item = current_cat.items[i+1]
                     if os.path.exists(item.value): st.image(item.value, use_container_width=True)
-                    else: st.warning(f"File not found: {item.value}")
-                    if item.headline: st.markdown(f"**{item.headline}**")
-                    if item.detail_ko: st.caption(item.detail_ko)
     else:
         for i in range(0, len(current_cat.items), 2):
             m_col1, m_col2 = st.columns(2)
