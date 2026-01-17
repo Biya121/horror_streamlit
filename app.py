@@ -165,7 +165,8 @@ CATEGORIES = [
             StatItem("Owlbear Cub", "41 million", "아울베어 새끼 역시 수천만 번의 손길을 받았습니다."),
             StatItem("Halsin Hug", "1.1 million", "에필로그에서 110만 명의 플레이어가 할신을 안아주었습니다."),
             StatItem("Petted Tara", "54,000", "게일의 친구 타라를 쓰다듬은 정성 어린 기록입니다.")
-        ]
+        ],
+        "https://pbs.twimg.com/media/GUYoj1AXkAAitOX?format=jpg&name=medium"
     ),
     Category(
         "Class Respec Stats",
