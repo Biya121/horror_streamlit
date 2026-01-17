@@ -122,7 +122,7 @@ CATEGORIES = [
             StatItem("Freed Us", "2 million", "200만 명의 플레이어가 지능 포식자 '우리(Us)'를 해방해 주었습니다."),
             StatItem("Spared Alfira", "377,000+", "다크 어지의 숙명을 거스르고 알피라를 살려낸 의지의 기록입니다.")
         ],
-        "https://via.placeholder.com/1200x400/1a1a1d/c7aa5c?text=Special+Moments+Illustration" # 이미지 주소 교체 가능
+        "https://pbs.twimg.com/media/GUYneuVXkAAhKSS?format=jpg&name=medium" # 이미지 주소 교체 가능
     ),
     Category(
         "Honour Mode",
