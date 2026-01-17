@@ -1,6 +1,7 @@
 import json
 import time
 import os
+import random
 from dataclasses import dataclass, asdict
 import streamlit as st
 
@@ -15,7 +16,7 @@ st.set_page_config(
 )
 
 # ----------------------------
-# Enhanced CSS (All Black Theme & Sticky Sidebar + Sword Animation)
+# Enhanced CSS (Sword Animation Update)
 # ----------------------------
 CSS = """
 <style>
@@ -29,11 +30,6 @@ CSS = """
     --gold-darker: #5e4d26;
     --text-main: #f2efe6;
     --text-muted: #a8a08d;
-    --accent-red: #8b0000;
-}
-
-header[data-testid="stHeader"] {
-    background-color: rgba(0,0,0,0) !important;
 }
 
 .stApp {
@@ -63,7 +59,6 @@ div.stButton > button {
     font-weight: bold !important;
     letter-spacing: 2px;
     padding: 0.8rem !important;
-    transition: all 0.3s ease !important;
 }
 
 div.stButton > button:hover {
@@ -72,15 +67,11 @@ div.stButton > button:hover {
     box-shadow: 0 0 20px var(--gold-primary);
 }
 
-div[data-testid="stTextInput"] input {
-    background-color: #121214 !important;
-    color: var(--gold-bright) !important;
-    border: 1px solid var(--gold-darker) !important;
-    font-family: 'Cinzel', serif;
+.stat-card {
+    border-left: 2px solid var(--gold-darker);
+    padding-left: 15px;
+    margin-bottom: 20px;
 }
-
-[data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
-[data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
 
 .gold-hr {
     height: 1px;
@@ -88,25 +79,19 @@ div[data-testid="stTextInput"] input {
     margin: 2rem 0;
 }
 
-.stat-card {
-    border-left: 2px solid var(--gold-darker);
-    padding-left: 15px;
-    margin-bottom: 20px;
-}
-
-/* --- Sword Falling Animation --- */
+/* --- Sword Falling Animation (매번 초기화되도록 설정) --- */
 @keyframes fall {
-    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
 
 .sword-rain {
     position: fixed;
-    top: -50px;
-    font-size: 2rem;
-    z-index: 9999;
+    top: -10%;
+    font-size: 2.5rem;
+    z-index: 99999;
     pointer-events: none;
-    animation: fall 3s linear forwards;
+    animation: fall 2.5s linear forwards;
 }
 </style>
 """
@@ -182,16 +167,15 @@ if "page" not in st.session_state:
     st.session_state.page = "Home"
 if "selected_cat" not in st.session_state:
     st.session_state.selected_cat = CATEGORIES[0].title_en
-if "trigger_swords" not in st.session_state:
-    st.session_state.trigger_swords = False
+if "sword_trigger_count" not in st.session_state:
+    st.session_state.sword_trigger_count = 0
 
 def go(page_name):
     st.session_state.page = page_name
 
 # ----------------------------
-# Page Renderers
+# Main Page Renderers
 # ----------------------------
-
 if st.session_state.page == "Home":
     st.image("https://giffiles.alphacoders.com/219/219996.gif", use_container_width=True)
     st.markdown('<div class="bigtitle" style="font-size: 5rem; margin-top: -80px;">ARCHIVE OF FATE</div>', unsafe_allow_html=True)
@@ -201,7 +185,6 @@ if st.session_state.page == "Home":
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c2:
         st.write("발더스 게이트 3의 세계에서 플레이어들이 남긴 방대한 발자취를 공식 통계로 정리했습니다.")
-        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
             go("Browse")
 
@@ -214,7 +197,6 @@ elif st.session_state.page == "Browse":
                 st.session_state.selected_cat = cat.title_en
         
         st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
-        
         if st.button("← Main Menu", key="back_home", use_container_width=True):
             go("Home")
             
@@ -222,25 +204,25 @@ elif st.session_state.page == "Browse":
         search_query = st.text_input("", placeholder="Enter & Move...", label_visibility="collapsed")
         if search_query:
             match = next((c for c in CATEGORIES if search_query.lower() in c.title_en.lower()), None)
-            if match:
-                st.session_state.selected_cat = match.title_en
+            if match: st.session_state.selected_cat = match.title_en
 
-        # Welcome! 버튼 - 칼 이모지 낙하 효과
+        # 애니메이션 트리거 버튼: 클릭할 때마다 count를 증가시킴
         if st.button("Welcome!", use_container_width=True):
-            st.session_state.trigger_swords = True
+            st.session_state.sword_trigger_count += 1
             st.toast("⚔️ The Blade of Destiny descends!")
 
     # 메인 콘텐츠 영역
-    # 칼 낙하 애니메이션 주입 (애니메이션 트리거 시)
-    if st.session_state.trigger_swords:
-        sword_html = ""
-        import random
-        for i in range(20):  # 20개의 검 생성
+    # 애니메이션 생성 로직
+    if st.session_state.sword_trigger_count > 0:
+        # 매번 고유한 key를 가진 container를 생성하여 브라우저가 새로 렌더링하게 함
+        sword_container = st.empty()
+        sword_html = f"" # HTML 주석에 변경점 삽입
+        for i in range(25):
             left = random.randint(0, 95)
             delay = random.uniform(0, 1.5)
-            sword_html += f'<div class="sword-rain" style="left: {left}%; animation-delay: {delay}s;">⚔️</div>'
-        st.markdown(sword_html, unsafe_allow_html=True)
-        st.session_state.trigger_swords = False # 리셋
+            duration = random.uniform(2.0, 3.5)
+            sword_html += f'<div class="sword-rain" style="left: {left}%; animation-delay: {delay}s; animation-duration: {duration}s;">⚔️</div>'
+        sword_container.markdown(sword_html, unsafe_allow_html=True)
 
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
@@ -252,35 +234,24 @@ elif st.session_state.page == "Browse":
     st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
+    # 데이터 표시 로직 (기존 유지)
     if current_cat.title_en == "Gallery":
         for i in range(0, len(current_cat.items), 2):
             g_col1, g_col2 = st.columns(2)
-            with g_col1:
-                item = current_cat.items[i]
-                if os.path.exists(item.value): st.image(item.value, use_container_width=True)
-                else: st.warning(f"File not found: {item.value}")
-                if item.headline: st.markdown(f"**{item.headline}**")
-                if item.detail_ko: st.caption(item.detail_ko)
-            if i + 1 < len(current_cat.items):
-                with g_col2:
-                    item = current_cat.items[i+1]
-                    if os.path.exists(item.value): st.image(item.value, use_container_width=True)
-                    else: st.warning(f"File not found: {item.value}")
-                    if item.headline: st.markdown(f"**{item.headline}**")
-                    if item.detail_ko: st.caption(item.detail_ko)
+            for idx, col in enumerate([g_col1, g_col2]):
+                if i + idx < len(current_cat.items):
+                    item = current_cat.items[i + idx]
+                    with col:
+                        if os.path.exists(item.value): st.image(item.value, use_container_width=True)
+                        else: st.warning(f"File not found: {item.value}")
     else:
         for i in range(0, len(current_cat.items), 2):
             m_col1, m_col2 = st.columns(2)
-            with m_col1:
-                item = current_cat.items[i]
-                st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                st.metric(label=item.headline, value=item.value)
-                st.write(item.detail_ko)
-                st.markdown('</div>', unsafe_allow_html=True)
-            if i + 1 < len(current_cat.items):
-                with m_col2:
-                    item = current_cat.items[i+1]
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.metric(label=item.headline, value=item.value)
-                    st.write(item.detail_ko)
-                    st.markdown('</div>', unsafe_allow_html=True)
+            for idx, col in enumerate([m_col1, m_col2]):
+                if i + idx < len(current_cat.items):
+                    item = current_cat.items[i + idx]
+                    with col:
+                        st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+                        st.metric(label=item.headline, value=item.value)
+                        st.write(item.detail_ko)
+                        st.markdown('</div>', unsafe_allow_html=True)
