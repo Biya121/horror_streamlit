@@ -32,25 +32,25 @@ CSS = """
     --accent-red: #8b0000;
 }
 
-/* 1. 상단 흰색 헤더 영역을 검은색으로 강제 수정 */
+/* 상단 흰색 헤더 제거 */
 header[data-testid="stHeader"] {
     background-color: rgba(0,0,0,0) !important;
 }
 
-/* 2. 전체 앱 배경 설정 */
+/* 전체 앱 배경 */
 .stApp {
     background-color: var(--bg-dark);
     background-image: radial-gradient(circle at 50% -20%, #2a2518 0%, #070708 80%);
     color: var(--text-main);
 }
 
-/* 3. 사이드바 내부 배경 및 테두리 설정 */
+/* 사이드바 배경 */
 section[data-testid="stSidebar"] {
     background-color: var(--bg-dark) !important;
     border-right: 1px solid var(--gold-darker);
 }
 
-/* 4. 타이포그래피 설정 */
+/* 타이포그래피 */
 h1, h2, h3, .bigtitle {
     font-family: 'Cinzel', serif !important;
     color: var(--gold-bright) !important;
@@ -58,7 +58,7 @@ h1, h2, h3, .bigtitle {
     text-align: center;
 }
 
-/* 5. 커스텀 버튼 스타일 (BG3 골드 테마) */
+/* 커스텀 버튼 */
 div.stButton > button {
     background: linear-gradient(180deg, #2a2518 0%, #000000 100%) !important;
     color: var(--gold-bright) !important;
@@ -77,7 +77,7 @@ div.stButton > button:hover {
     box-shadow: 0 0 20px var(--gold-primary);
 }
 
-/* 6. 입력창 스타일 커스텀 (검색창) */
+/* 검색창 스타일 */
 div[data-testid="stTextInput"] input {
     background-color: #121214 !important;
     color: var(--gold-bright) !important;
@@ -85,7 +85,7 @@ div[data-testid="stTextInput"] input {
     font-family: 'Cinzel', serif;
 }
 
-/* 7. 메트릭 및 장식 요소 */
+/* 메트릭 및 카드 */
 [data-testid="stMetricValue"] { font-family: 'Cinzel' !important; color: var(--gold-bright) !important; font-size: 2.8rem !important; }
 [data-testid="stMetricLabel"] { color: var(--text-muted) !important; letter-spacing: 1px; }
 
@@ -105,7 +105,7 @@ div[data-testid="stTextInput"] input {
 st.markdown(CSS, unsafe_allow_html=True)
 
 # ----------------------------
-# Data Structure & Full Content
+# Data Structure
 # ----------------------------
 @dataclass
 class StatItem:
@@ -121,84 +121,50 @@ class Category:
     img_url: str = "" 
 
 CATEGORIES = [
-    Category(
-        "Most Importantly",
-        "커뮤니티에서 가장 화제가 된 특이하고 재미있는 기록들입니다.",
-        [
-            StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신하는 굴욕(혹은 행운)을 겪었습니다."),
-            StatItem("Friendly Dinosaurs", "3.5 million", "350만 명이 쥬라기 시대를 방불케 하는 친절한 공룡들을 만났습니다."),
-            StatItem("Freed Us", "2 million", "200만 명의 플레이어가 지능 포식자 '우리(Us)'를 해방해 주었습니다."),
-            StatItem("Spared Alfira", "377,000+", "다크 어지의 숙명을 거스르고 알피라를 살려낸 의지의 기록입니다.")
-        ],
-        "https://pbs.twimg.com/media/GUYneuVXkAAhKSS?format=jpg&name=medium"
-    ),
-    Category(
-        "Honour Mode",
-        "치명적인 난이도와 단 하나의 세이브 파일. 영광스러운 정복자들의 수치입니다.",
-        [
-            StatItem("Conquered", "141,660", "황금 주사위를 쟁취하며 명예를 증명한 수입니다."),
-            StatItem("Level 1 Only", "4,647", "레벨 1로 명예를 클리어한 믿기 힘든 기록입니다."),
-            StatItem("Defeats", "1,223,305", "실패로 끝난 명예 모드 횟수입니다."),
-            StatItem("Honourable Choice", "76%", "실패 후 76%는 명예롭게 세이브를 지웠고, 24%는 모험을 이어갔습니다.")
-        ],
-        "https://pbs.twimg.com/media/GUYn_GlXkAA-rs6?format=jpg&name=medium"
-    ),
-    Category(
-        "Origin & Avatars",
-        "누가 이 거대한 서사의 중심에 섰을까요?",
-        [
-            StatItem("Custom Avatar", "93%+", "대부분의 모험가는 자신만의 영웅을 직접 빚어냈습니다."),
-            StatItem("Astarion", "1.21 M", "오리진 캐릭터 중 가장 많은 선택을 받은 주인공입니다."),
-            StatItem("Gale", "1.20 M", "마법사 게일이 아주 근소한 차이로 뒤를 잇습니다."),
-            StatItem("Shadowheart", "0.86 M", "섀도하트가 오리진 선택지 중 3위를 차지했습니다.")
-        ],
-        "https://pbs.twimg.com/media/GUYoM75WsAAFgNc?format=jpg&name=medium"
-    ),
-    Category(
-        "Romance & Intimacy",
-        "캠프에서의 사랑은 전투만큼이나 치열했습니다.",
-        [
-            StatItem("Companion Kisses", "75M+", "동료들과 나눈 입맞춤은 이미 7,500만 번을 돌파했습니다."),
-            StatItem("Kiss Leader", "Shadowheart", "2,700만 번의 키스로 섀도하트가 독보적 1위를 기록했습니다."),
-            StatItem("The Emperor", "1.1 million", "110만 명의 모험가가 마인드 플레이어와 사랑을 나누었습니다."),
-            StatItem("Halsin Split", "70% / 30%", "할신과의 관계 중 30%는 곰의 형상으로 이루어졌습니다.")
-        ],
-        "https://pbs.twimg.com/media/GUYoazpXQAAS2QF?format=jpg&name=medium"
-    ),
-    Category(
-        "Pets & Epilogues",
-        "동물 친구들과의 교감, 그리고 그 후의 이야기입니다.",
-        [
-            StatItem("Scratch", "120 million", "스크래치는 세상에서 가장 많이 사랑받은 강아지입니다."),
-            StatItem("Owlbear Cub", "41 million", "아울베어 새끼 역시 수천만 번의 손길을 받았습니다."),
-            StatItem("Halsin Hug", "1.1 million", "에필로그에서 110만 명의 플레이어가 할신을 안아주었습니다."),
-            StatItem("Petted Tara", "54,000", "게일의 친구 타라를 쓰다듬은 정성 어린 기록입니다.")
-        ],
-        "https://pbs.twimg.com/media/GUYoj1AXkAAitOX?format=jpg&name=medium"
-    ),
-    Category(
-        "Class Respec Stats",
-        "운명을 바꾼 모험가들. 리스펙(Respec)의 모든 것입니다.",
-        [
-            StatItem("Shadowheart", "4.89M times", "가장 많이 직업이 바뀐 동료 1위입니다."),
-            StatItem("Wyll", "1.41M times", "윌은 주로 헥스블레이드로 새로운 길을 찾았습니다."),
-            StatItem("Minsc", "350 people", "민스크를 '죽음 권역' 클레릭으로 바꾼 독특한 취향의 모험가들입니다."),
-            StatItem("Multiclass", "2.30%", "단 한 번의 플레이로 모든 클래스를 경험한 달인들입니다.")
-        ],
-        "https://pbs.twimg.com/media/GxhDmNaXcAADB9_?format=jpg&name=medium"
-    ),
-    Category(
-        "Gallery",
-        "모험의 순간들을 기록한 이미지 저장소입니다.",
-        [
-            StatItem("", "assets/photo1.gif", ""),
-            StatItem("", "assets/photo2.gif", ""),
-            StatItem("", "assets/photo4.gif", ""),
-            StatItem("", "assets/photo5.gif", ""),
-            StatItem("", "assets/photo8.gif", ""),
-            StatItem("", "assets/photo10.gif", "")
-        ],
-    )
+    Category("Most Importantly", "커뮤니티에서 가장 화제가 된 특이하고 재미있는 기록들입니다.", [
+        StatItem("Cheese Wheel", "1.9 million", "190만 명의 모험가가 치즈 바퀴로 변신하는 굴욕을 겪었습니다."),
+        StatItem("Friendly Dinosaurs", "3.5 million", "350만 명이 친절한 공룡들을 만났습니다."),
+        StatItem("Freed Us", "2 million", "플레이어 200만 명이 지능 포식자 '우리'를 해방했습니다."),
+        StatItem("Spared Alfira", "377,000+", "다크 어지의 숙명을 거스르고 알피라를 살려냈습니다.")
+    ], "https://pbs.twimg.com/media/GUYneuVXkAAhKSS?format=jpg&name=medium"),
+    Category("Honour Mode", "영광스러운 정복자들의 수치입니다.", [
+        StatItem("Conquered", "141,660", "황금 주사위를 쟁취하며 명예를 증명했습니다."),
+        StatItem("Level 1 Only", "4,647", "레벨 1로 명예를 클리어한 기록입니다."),
+        StatItem("Defeats", "1,223,305", "실패로 끝난 명예 모드 횟수입니다."),
+        StatItem("Honourable Choice", "76%", "실패 후 76%는 명예롭게 세이브를 지웠습니다.")
+    ], "https://pbs.twimg.com/media/GUYn_GlXkAA-rs6?format=jpg&name=medium"),
+    Category("Origin & Avatars", "누가 서사의 중심에 섰을까요?", [
+        StatItem("Custom Avatar", "93%+", "대부분은 자신만의 영웅을 직접 빚어냈습니다."),
+        StatItem("Astarion", "1.21 M", "오리진 캐릭터 중 가장 많은 선택을 받았습니다."),
+        StatItem("Gale", "1.20 M", "마법사 게일이 근소한 차이로 뒤를 잇습니다."),
+        StatItem("Shadowheart", "0.86 M", "섀도하트가 오리진 선택지 중 3위입니다.")
+    ], "https://pbs.twimg.com/media/GUYoM75WsAAFgNc?format=jpg&name=medium"),
+    Category("Romance & Intimacy", "캠프에서의 사랑 기록입니다.", [
+        StatItem("Companion Kisses", "75M+", "동료들과 나눈 입맞춤은 7,500만 번을 돌파했습니다."),
+        StatItem("Kiss Leader", "Shadowheart", "섀도하트가 독보적 1위를 기록했습니다."),
+        StatItem("The Emperor", "1.1 million", "110만 명이 마인드 플레이어와 사랑을 나누었습니다."),
+        StatItem("Halsin Split", "70% / 30%", "할신과의 관계 중 30%는 곰 형상으로 이루어졌습니다.")
+    ], "https://pbs.twimg.com/media/GUYoazpXQAAS2QF?format=jpg&name=medium"),
+    Category("Pets & Epilogues", "동물 친구들과의 교감 기록입니다.", [
+        StatItem("Scratch", "120 million", "세상에서 가장 많이 사랑받은 강아지입니다."),
+        StatItem("Owlbear Cub", "41 million", "아울베어 새끼 역시 수천만 번의 손길을 받았습니다."),
+        StatItem("Halsin Hug", "1.1 million", "에필로그에서 110만 명이 할신을 안아주었습니다."),
+        StatItem("Petted Tara", "54,000", "게일의 친구 타라를 쓰다듬은 기록입니다.")
+    ], "https://pbs.twimg.com/media/GUYoj1AXkAAitOX?format=jpg&name=medium"),
+    Category("Class Respec Stats", "리스펙(Respec)의 모든 것입니다.", [
+        StatItem("Shadowheart", "4.89M times", "가장 많이 직업이 바뀐 동료 1위입니다."),
+        StatItem("Wyll", "1.41M times", "윌은 주로 헥스블레이드로 새로운 길을 찾았습니다."),
+        StatItem("Minsc", "350 people", "민스크를 클레릭으로 바꾼 독특한 취향들입니다."),
+        StatItem("Multiclass", "2.30%", "한 번의 플레이로 모든 클래스를 경험한 달인들입니다.")
+    ], "https://pbs.twimg.com/media/GxhDmNaXcAADB9_?format=jpg&name=medium"),
+    Category("Gallery", "이미지 저장소입니다.", [
+        StatItem("", "assets/photo1.gif", ""),
+        StatItem("", "assets/photo2.gif", ""),
+        StatItem("", "assets/photo4.gif", ""),
+        StatItem("", "assets/photo5.gif", ""),
+        StatItem("", "assets/photo8.gif", ""),
+        StatItem("", "assets/photo10.gif", "")
+    ])
 ]
 
 # ----------------------------
@@ -218,10 +184,8 @@ def go(page_name):
 
 if st.session_state.page == "Home":
     st.image("https://giffiles.alphacoders.com/219/219996.gif", use_container_width=True)
-    
     st.markdown('<div class="bigtitle" style="font-size: 5rem; margin-top: -80px;">ARCHIVE OF FATE</div>', unsafe_allow_html=True)
     st.markdown('<p style="text-align:center; font-family:Cinzel; letter-spacing:5px;">A Repository of Every Decision, Every Roll, Every Death.</p>', unsafe_allow_html=True)
-    
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1.5, 1])
@@ -232,38 +196,38 @@ if st.session_state.page == "Home":
             go("Browse")
 
 elif st.session_state.page == "Browse":
-    # 1. 사이드바 영역 (네비게이션 고정 + 검색)
     with st.sidebar:
-        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Navigation</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--gold-primary); font-family: Cinzel; font-weight: bold; margin-top: 2rem; text-align: center;">Search Archive</p>', unsafe_allow_html=True)
         
-        # 카테고리 버튼들 출력
-        for cat in CATEGORIES:
-            if st.button(cat.title_en, key=f"side_{cat.title_en}", use_container_width=True):
-                st.session_state.selected_cat = cat.title_en
-        
-        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
-        
-        # 메인 메뉴 이동 버튼
-        if st.button("← Main Menu", key="back_home", use_container_width=True):
-            go("Home")
-            
-        # --- 카테고리 검색 기능 추가 ---
-        st.markdown('<p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 2rem;">Search Categories</p>', unsafe_allow_html=True)
-        search_query = st.text_input("", placeholder="Type to filter...", label_visibility="collapsed")
+        # --- 1. 엔터만 치면 바로 검색되는 기능 ---
+        search_query = st.text_input("", placeholder="Enter Category Name...", label_visibility="collapsed")
         
         if search_query:
-            filtered_cats = [c for c in CATEGORIES if search_query.lower() in c.title_en.lower()]
-            if filtered_cats:
-                st.markdown('<p style="color: var(--gold-primary); font-size: 0.7rem;">Results:</p>', unsafe_allow_html=True)
-                for f_cat in filtered_cats:
-                    if st.button(f"🔍 {f_cat.title_en}", key=f"search_{f_cat.title_en}", use_container_width=True):
-                        st.session_state.selected_cat = f_cat.title_en
+            # 입력값과 유사한 카테고리 하나를 즉시 선택
+            match = next((c for c in CATEGORIES if search_query.lower() in c.title_en.lower()), None)
+            if match:
+                st.session_state.selected_cat = match.title_en
+                st.success(f"Found: {match.title_en}")
             else:
-                st.caption("No categories found.")
+                st.error("No matches found.")
 
-    # 2. 메인 콘텐츠 영역
+        st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+
+        # --- 2. Welcome 버튼 & 칼 이모지 효과 ---
+        if st.button("Welcome!", use_container_width=True):
+            st.balloons() # 기본 벌룬 효과와 함께
+            st.toast("⚔️ The Blade of Destiny descends!")
+            # 칼 이모지 수동 눈 내림 효과 모사
+            for _ in range(3):
+                st.markdown("### ⚔️ 🗡️ ⚔️ 🗡️ ⚔️")
+                time.sleep(0.1)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("← Main Menu", key="back_home", use_container_width=True):
+            go("Home")
+
+    # 메인 콘텐츠 영역
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem; margin-top: 0;">The Archive</h2>', unsafe_allow_html=True)
-
     current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
     
     if current_cat.img_url:
@@ -273,44 +237,32 @@ elif st.session_state.page == "Browse":
     st.markdown(f'<p style="color: var(--text-muted); font-style: italic;">{current_cat.description_ko}</p>', unsafe_allow_html=True)
     st.markdown('<div class="gold-hr"></div>', unsafe_allow_html=True)
 
-    # --- 갤러리 카테고리 ---
+    # 갤러리 및 통계 렌더링
     if current_cat.title_en == "Gallery":
         for i in range(0, len(current_cat.items), 2):
             g_col1, g_col2 = st.columns(2)
-            
             with g_col1:
                 item = current_cat.items[i]
-                if os.path.exists(item.value):
-                    st.image(item.value, use_container_width=True)
-                else:
-                    st.warning(f"File not found: {item.value}")
-                    
+                if os.path.exists(item.value): st.image(item.value, use_container_width=True)
+                else: st.warning(f"File not found: {item.value}")
                 if item.headline: st.markdown(f"**{item.headline}**")
                 if item.detail_ko: st.caption(item.detail_ko)
-            
             if i + 1 < len(current_cat.items):
                 with g_col2:
                     item = current_cat.items[i+1]
-                    if os.path.exists(item.value):
-                        st.image(item.value, use_container_width=True)
-                    else:
-                        st.warning(f"File not found: {item.value}")
-                        
+                    if os.path.exists(item.value): st.image(item.value, use_container_width=True)
+                    else: st.warning(f"File not found: {item.value}")
                     if item.headline: st.markdown(f"**{item.headline}**")
                     if item.detail_ko: st.caption(item.detail_ko)
-    
-    # --- 일반 통계 카테고리 ---
     else:
         for i in range(0, len(current_cat.items), 2):
             m_col1, m_col2 = st.columns(2)
-            
             with m_col1:
                 item = current_cat.items[i]
                 st.markdown('<div class="stat-card">', unsafe_allow_html=True)
                 st.metric(label=item.headline, value=item.value)
                 st.write(item.detail_ko)
                 st.markdown('</div>', unsafe_allow_html=True)
-            
             if i + 1 < len(current_cat.items):
                 with m_col2:
                     item = current_cat.items[i+1]
