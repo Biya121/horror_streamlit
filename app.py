@@ -1,5 +1,6 @@
 import json
 import time
+import os
 from dataclasses import dataclass, asdict
 import streamlit as st
 
@@ -183,7 +184,6 @@ CATEGORIES = [
         "Gallery",
         "모험의 순간들을 기록한 이미지 저장소입니다.",
         [
-            # 아래 형식으로 사진 제목과 이미지 링크를 계속 추가할 수 있습니다.
             StatItem("", "assets/photo1.gif", ""),
             StatItem("", "assets/photo2.gif", ""),
             StatItem("", "assets/photo3.gif", ""),
@@ -195,7 +195,6 @@ CATEGORIES = [
         ],
     )
 ]
-
 
 # ----------------------------
 # Session State
@@ -226,13 +225,13 @@ if st.session_state.page == "Home":
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("기록 보관소 입장 (Browse Stats)", use_container_width=True):
             go("Browse")
-        st.markdown('</div>', unsafe_allow_html=True)
 
 elif st.session_state.page == "Browse":
     st.markdown('<div style="padding: 1rem 0;">', unsafe_allow_html=True)
     st.markdown('<h2 style="text-align: left; font-size: 2.5rem;">The Archive</h2>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # col_main 정의를 이 조건절 안으로 이동하여 NameError 방지
     col_nav, col_main = st.columns([0.8, 2.2], gap="large")
     
     with col_nav:
@@ -244,9 +243,8 @@ elif st.session_state.page == "Browse":
         st.markdown('<div class="gold-hr" style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
         if st.button("← Main Menu", use_container_width=True):
             go("Home")
-        st.markdown('</div>', unsafe_allow_html=True)
 
-with col_main:
+    with col_main:
         current_cat = next(c for c in CATEGORIES if c.title_en == st.session_state.selected_cat)
         
         if current_cat.img_url:
@@ -263,15 +261,23 @@ with col_main:
                 
                 with g_col1:
                     item = current_cat.items[i]
-                    # st.metric 대신 st.image를 사용합니다.
-                    st.image(item.value, use_container_width=True)
+                    # 파일 존재 여부 확인 후 출력 (MediaFileStorageError 방지)
+                    if os.path.exists(item.value):
+                        st.image(item.value, use_container_width=True)
+                    else:
+                        st.warning(f"File not found: {item.value}")
+                        
                     if item.headline: st.markdown(f"**{item.headline}**")
                     if item.detail_ko: st.caption(item.detail_ko)
                 
                 if i + 1 < len(current_cat.items):
                     with g_col2:
                         item = current_cat.items[i+1]
-                        st.image(item.value, use_container_width=True)
+                        if os.path.exists(item.value):
+                            st.image(item.value, use_container_width=True)
+                        else:
+                            st.warning(f"File not found: {item.value}")
+                            
                         if item.headline: st.markdown(f"**{item.headline}**")
                         if item.detail_ko: st.caption(item.detail_ko)
         
